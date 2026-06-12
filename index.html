@@ -86,11 +86,53 @@ input, textarea {
   height: 100vh;
   min-width: 1240px;
   background: var(--bg);
+  transition: grid-template-columns 0.25s ease;
 }
+
+.panel-collapse-btn { display: none; }
 
 /* enforce desktop min-width only on real desktop */
 @media (min-width: 769px) {
   .app { min-width: 1240px; }
+
+  .app.left-collapsed { grid-template-columns: 44px 1fr 380px; }
+  .app.right-collapsed { grid-template-columns: 256px 1fr 44px; }
+  .app.left-collapsed.right-collapsed { grid-template-columns: 44px 1fr 44px; }
+
+  .panel-collapse-btn {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    color: var(--text-3);
+    font-size: 10px;
+    flex-shrink: 0;
+    align-self: center;
+    transition: background 0.12s, color 0.12s;
+  }
+  .panel-collapse-btn:hover { background: var(--surface-hover); color: var(--text); }
+  .sidebar-header .panel-collapse-btn { margin-left: auto; }
+
+  /* collapsed sidebar: narrow strip, only the expand button */
+  .sidebar.collapsed > *:not(.sidebar-header) { display: none !important; }
+  .sidebar.collapsed .sidebar-header {
+    padding: 12px 0;
+    justify-content: center;
+    border-bottom: none;
+  }
+  .sidebar.collapsed .sidebar-header > *:not(.panel-collapse-btn) { display: none; }
+  .sidebar.collapsed .sidebar-header .panel-collapse-btn { margin-left: 0; }
+
+  /* collapsed right panel: narrow strip, only the expand button */
+  .right-panel.collapsed .right-content { display: none; }
+  .right-panel.collapsed .right-tabs {
+    padding: 12px 0;
+    justify-content: center;
+    border-bottom: none;
+    overflow: visible;
+  }
+  .right-panel.collapsed .right-tabs > *:not(.panel-collapse-btn) { display: none; }
 }
 
 /* ============ API KEY MODAL ============ */
@@ -1505,6 +1547,41 @@ input, textarea {
   }
   .mobile-end-session-row:active { opacity: 0.8; }
   .mobile-settings-divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .mobile-settings-panel { max-height: 85dvh; max-height: 85vh; overflow-y: auto; }
+
+  /* — Аудит переполнений — */
+
+  /* Шапка: длинное имя обрезается, бейдж и кнопка не сжимаются */
+  .session-title-big { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .demo-badge { flex-shrink: 0; }
+
+  /* Шапка сообщения: имя + эмоция + время переносятся вместо наложения */
+  .msg-head { flex-wrap: wrap; row-gap: 1px; }
+  .msg-emotion { min-width: 0; max-width: 45vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Инлайн-фидбек не шире контейнера */
+  .inline-feedback { max-width: 100%; overflow-wrap: anywhere; }
+  .fb-row .fb-label { min-width: 58px; }
+  .fb-row .fb-val { min-width: 0; overflow-wrap: anywhere; }
+
+  /* Длинные слова не вылезают из карточек */
+  .msg-text, .field-val, .beck-box-content, .smer-cell-val, .tech-desc,
+  .distortion-quote, .situation-text, .panel-meta, .review-list li { overflow-wrap: anywhere; }
+
+  /* Сетки правой панели — одна колонка */
+  .beck-triple { grid-template-columns: 1fr; }
+  .smer-grid { grid-template-columns: 1fr; }
+  .review-metrics { grid-template-columns: 1fr 1fr; }
+
+  /* Цикл опыта: перенос узлов вместо выхода за экран */
+  .cycle-viz { flex-wrap: wrap; row-gap: 4px; overflow-x: visible; }
+
+  /* Сжимаемые flex/grid-дети */
+  .right-content { overflow-x: hidden; }
+  .panel-section, .tech-card, .distortion-card, .smer-row, .beck-box, .situation-item { min-width: 0; }
+  .scale-name { width: 70px; flex: 0 0 70px; }
+  .approach-label { width: 84px; font-size: 11px; }
+  .composer-hint { flex-wrap: wrap; }
 }
 </style>
 
@@ -2027,19 +2104,22 @@ function CaseItem({ c, isActive, onSelect, onArchive, menuLabel }) {
   );
 }
 
-function Sidebar({ allCases, activeCaseId, onSelectCase, activeSessionN, onSelectSession, onChangeKey, archivedIds, onArchive, onRestore, onNewClient, mobileVisible }) {
+function Sidebar({ allCases, activeCaseId, onSelectCase, activeSessionN, onSelectSession, onChangeKey, archivedIds, onArchive, onRestore, onNewClient, mobileVisible, collapsed, onToggleCollapse }) {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const activeCase = allCases.find(c => c.id === activeCaseId);
   const activeCases = allCases.filter(c => !archivedIds.has(c.id));
   const archivedCases = allCases.filter(c => archivedIds.has(c.id));
   return (
-    <aside className={`sidebar${mobileVisible ? ' mobile-visible' : ''}`}>
+    <aside className={`sidebar${mobileVisible ? ' mobile-visible' : ''}${collapsed ? ' collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="brand-mark">К</div>
         <div>
           <div className="brand-title">Практика КПТ</div>
           <div className="brand-sub">Trainer · v1.0</div>
         </div>
+        <button className="panel-collapse-btn" onClick={onToggleCollapse} title={collapsed ? 'Развернуть панель' : 'Свернуть панель'}>
+          {collapsed ? '▶' : '◀'}
+        </button>
       </div>
 
       <div className="sidebar-section" style={{ overflowY: 'auto', flex: 1 }}>
@@ -2864,7 +2944,7 @@ function ApproachesTab({ approachCounts, recentApproaches }) {
   );
 }
 
-function RightPanel({ caseData, distortionsObserved, mechanisms, smerEntries, scales, notes, onNotesChange, onAddSmer, mode, approachCounts, recentApproaches, cyclePhase, onCyclePhaseChange, phenomenology, onPhenomenologyChange, unfinishedSituations, onUnfinishedChange, mobileVisible }) {
+function RightPanel({ caseData, distortionsObserved, mechanisms, smerEntries, scales, notes, onNotesChange, onAddSmer, mode, approachCounts, recentApproaches, cyclePhase, onCyclePhaseChange, phenomenology, onPhenomenologyChange, unfinishedSituations, onUnfinishedChange, mobileVisible, collapsed, onToggleCollapse }) {
   const [tab, setTab] = useState('card');
   const modeTabs = TABS_BY_MODE[mode] || TABS_BY_MODE.cbt;
 
@@ -2880,8 +2960,11 @@ function RightPanel({ caseData, distortionsObserved, mechanisms, smerEntries, sc
   };
 
   return (
-    <aside className={`right-panel${mobileVisible ? ' mobile-visible' : ''}`}>
+    <aside className={`right-panel${mobileVisible ? ' mobile-visible' : ''}${collapsed ? ' collapsed' : ''}`}>
       <div className="right-tabs">
+        <button className="panel-collapse-btn" onClick={onToggleCollapse} title={collapsed ? 'Развернуть панель' : 'Свернуть панель'}>
+          {collapsed ? '◀' : '▶'}
+        </button>
         {modeTabs.map(t => {
           const badge = getBadge(t);
           return (
@@ -2966,6 +3049,15 @@ function App() {
   const [therapyMode, setTherapyMode] = useState(() => localStorage.getItem('cbt_therapy_mode') || 'cbt');
   const [mobileTab, setMobileTab] = useState('chat');
   const [showMobileSettings, setShowMobileSettings] = useState(false);
+  const [leftCollapsed, setLeftCollapsed] = useState(() => localStorage.getItem('panel_left_collapsed') === '1');
+  const [rightCollapsed, setRightCollapsed] = useState(() => localStorage.getItem('panel_right_collapsed') === '1');
+
+  function toggleLeftPanel() {
+    setLeftCollapsed(v => { localStorage.setItem('panel_left_collapsed', v ? '0' : '1'); return !v; });
+  }
+  function toggleRightPanel() {
+    setRightCollapsed(v => { localStorage.setItem('panel_right_collapsed', v ? '0' : '1'); return !v; });
+  }
   const [generatedClients, setGeneratedClients] = useState(() => {
     try { return JSON.parse(localStorage.getItem('cbt_generated_clients') || '[]'); } catch { return []; }
   });
@@ -3146,7 +3238,7 @@ function App() {
   if (!hasKey && !isDemoMode) return <ApiKeyModal onSave={() => setHasKey(true)} onDemo={() => setIsDemoMode(true)} />;
 
   return (
-    <div className="app">
+    <div className={`app${leftCollapsed ? ' left-collapsed' : ''}${rightCollapsed ? ' right-collapsed' : ''}`}>
       {showNewClientModal && (
         <NewClientModal onClose={() => setShowNewClientModal(false)} onGenerate={handleNewClientGenerated} />
       )}
@@ -3170,6 +3262,8 @@ function App() {
         onRestore={handleRestore}
         onNewClient={() => setShowNewClientModal(true)}
         mobileVisible={mobileTab === 'clients'}
+        collapsed={leftCollapsed}
+        onToggleCollapse={toggleLeftPanel}
       />
       <ChatArea
         caseData={activeCase}
@@ -3205,6 +3299,8 @@ function App() {
         unfinishedSituations={state.unfinishedSituations}
         onUnfinishedChange={v => patchState({ unfinishedSituations: v })}
         mobileVisible={mobileTab === 'card'}
+        collapsed={rightCollapsed}
+        onToggleCollapse={toggleRightPanel}
       />
       <div className="mobile-tabbar">
         {[
