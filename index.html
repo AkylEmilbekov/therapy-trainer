@@ -1,0 +1,3229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Практика КПТ — тренажёр терапевта</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F4F3EE;
+  --surface-hover: #EFEEE8;
+  --border: #E6E4DD;
+  --border-strong: #D5D2C8;
+  --text: #1A1A19;
+  --text-2: #595955;
+  --text-3: #8A8881;
+  --text-4: #B5B2A8;
+  --accent: #2A6FDB;
+  --accent-soft: #E8F0FC;
+  --warm: #D97757;
+  --warm-soft: #FBEFE7;
+  --success: #1F8A5B;
+  --success-soft: #E3F1EA;
+  --warn: #C2410C;
+  --warn-soft: #FBEAE0;
+  --distortion: #B45309;
+  --distortion-bg: #FEF3C7;
+  --shadow-sm: 0 1px 2px rgba(20,20,18,0.04);
+  --shadow-md: 0 4px 16px rgba(20,20,18,0.06), 0 1px 3px rgba(20,20,18,0.04);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "Geist", -apple-system, system-ui, sans-serif;
+  --serif: "Newsreader", "Source Serif Pro", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-feature-settings: "ss01", "cv11";
+}
+
+body {
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* ============ LAYOUT ============ */
+
+.app {
+  display: grid;
+  grid-template-columns: 256px 1fr 380px;
+  height: 100vh;
+  min-width: 1240px;
+  background: var(--bg);
+}
+
+/* enforce desktop min-width only on real desktop */
+@media (min-width: 769px) {
+  .app { min-width: 1240px; }
+}
+
+/* ============ API KEY MODAL ============ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,20,18,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 440px;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-h {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.modal-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 13px;
+  font-family: var(--mono);
+  outline: none;
+  transition: border-color 0.15s;
+  margin-bottom: 6px;
+}
+
+.modal-input:focus {
+  border-color: var(--text-3);
+  background: var(--surface);
+}
+
+.modal-hint {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  font-weight: 540;
+  letter-spacing: -0.005em;
+  transition: background 0.12s;
+}
+
+.modal-btn:hover { background: #000; }
+.modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.modal-note {
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* ============ SIDEBAR ============ */
+
+.sidebar {
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--text);
+  color: var(--bg);
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.brand-title {
+  font-size: 13.5px;
+  font-weight: 540;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  font-weight: 500;
+}
+
+.sidebar-section {
+  padding: 16px 12px 8px;
+}
+
+.sidebar-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 6px 8px;
+}
+
+.case-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex: 0 0 28px;
+}
+
+.case-meta { flex: 1; min-width: 0; }
+
+.case-name {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.case-dx {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.case-item.active .case-name { color: var(--text); }
+.case-item.active .case-dx { color: var(--text-2); }
+
+.sessions { margin-top: 4px; }
+
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-2);
+  transition: background 0.12s;
+  width: 100%;
+  text-align: left;
+}
+
+.session-row:hover { background: var(--surface-hover); }
+
+.session-row.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
+}
+
+.session-num {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  width: 18px;
+  flex: 0 0 18px;
+  text-align: center;
+}
+
+.session-row.active .session-num { color: var(--text-2); }
+
+.session-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border-strong);
+  flex: 0 0 6px;
+}
+
+.session-row.active .session-dot { background: var(--success); }
+.session-row[data-status="done"] .session-dot { background: var(--text-3); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.therapist-chip {
+  display: flex; gap: 8px; align-items: center;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-2);
+  flex: 1;
+}
+
+.therapist-chip .case-avatar { background: var(--text); }
+
+/* ============ MAIN ============ */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.main-header {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.session-title-big {
+  font-size: 14px;
+  font-weight: 540;
+  letter-spacing: -0.01em;
+}
+
+.session-title-big .crumb {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.stage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.stage-pill .stage-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
+
+.timer {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-3);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 0 16px;
+}
+
+.chat-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.msg { display: flex; gap: 12px; align-items: flex-start; }
+
+.msg.system {
+  font-size: 12.5px;
+  color: var(--text-3);
+  font-style: italic;
+  background: transparent;
+  padding: 4px 14px;
+  border-left: 2px solid var(--border-strong);
+  margin-left: 4px;
+  align-self: stretch;
+  max-width: 100%;
+}
+
+.msg-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex: 0 0 30px;
+  margin-top: 1px;
+}
+
+.msg-body { flex: 1; min-width: 0; }
+
+.msg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.msg-name { font-size: 13px; font-weight: 540; letter-spacing: -0.005em; }
+.msg-emotion { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+.msg-time { font-size: 11px; color: var(--text-4); font-family: var(--mono); margin-left: auto; }
+
+.msg-text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
+}
+
+.msg.therapist .msg-name { color: var(--accent); }
+
+.distortion-mark {
+  background: var(--distortion-bg);
+  color: var(--distortion);
+  padding: 1px 3px;
+  border-radius: 3px;
+  cursor: help;
+  font-weight: 500;
+  border-bottom: 1.5px dotted var(--distortion);
+  position: relative;
+}
+
+.inline-feedback {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inline-feedback-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.score-pill.good { background: var(--success-soft); color: var(--success); }
+.score-pill.ok { background: var(--accent-soft); color: var(--accent); }
+.score-pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+.fb-row { display: flex; gap: 8px; align-items: flex-start; }
+.fb-row .fb-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  min-width: 70px;
+  padding-top: 1px;
+}
+.fb-row .fb-val { flex: 1; font-size: 12.5px; color: var(--text); }
+.fb-row .fb-val em { font-style: italic; color: var(--text-2); font-family: var(--serif); }
+
+.typing { display: flex; gap: 4px; padding: 6px 0; }
+.typing span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-4);
+  animation: bouncy 1.2s infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.15s; }
+.typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes bouncy {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* ============ COMPOSER ============ */
+
+.composer {
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  padding: 14px 24px 18px;
+  flex-shrink: 0;
+}
+
+.composer-inner { max-width: 720px; margin: 0 auto; }
+
+.composer-hint {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.composer-hint-strong { color: var(--text); font-weight: 500; }
+
+.composer-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+}
+
+.composer-box:focus-within {
+  border-color: var(--text-3);
+  box-shadow: var(--shadow-md);
+}
+
+.composer textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 12px 14px 4px;
+  background: transparent;
+  font-size: 14.5px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  min-height: 44px;
+  max-height: 200px;
+  font-family: var(--sans);
+}
+
+.composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 8px 12px;
+}
+
+.composer-techniques { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+
+.tech-chip {
+  font-size: 11px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.tech-chip:hover { background: var(--surface-hover); color: var(--text); }
+.tech-chip.suggested {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(42,111,219,0.2);
+}
+
+.send-btn {
+  background: var(--text);
+  color: var(--bg);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 540;
+  letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.send-btn:hover { background: #000; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.send-btn kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(255,255,255,0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ============ RIGHT PANEL ============ */
+
+.right-panel {
+  background: var(--surface-2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 6px 0;
+  gap: 1px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.right-tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  padding: 7px 7px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  position: relative;
+  font-weight: 500;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--text); background: var(--bg); }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: var(--bg);
+}
+
+.tab-badge {
+  font-size: 10px;
+  font-family: var(--mono);
+  background: var(--text);
+  color: var(--bg);
+  padding: 0 5px;
+  border-radius: 999px;
+  min-width: 16px;
+  display: inline-grid;
+  place-items: center;
+  height: 14px;
+  font-weight: 600;
+}
+.tab-btn:not(.active) .tab-badge { background: var(--border-strong); color: var(--text-2); }
+
+.right-content { flex: 1; overflow-y: auto; background: var(--bg); }
+
+.panel-section {
+  padding: 18px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-section:last-child { border-bottom: none; }
+
+.panel-h {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+
+.panel-h2 {
+  font-family: var(--serif);
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.panel-meta { font-size: 12px; color: var(--text-3); }
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.field-val { font-size: 13px; color: var(--text); line-height: 1.5; text-wrap: pretty; }
+.field-val ul { margin: 4px 0 0; padding-left: 18px; }
+.field-val li { margin-bottom: 2px; }
+
+.goal-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.goal-list li {
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.goal-list .goal-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 600;
+  padding-top: 2px;
+  min-width: 14px;
+}
+
+.beck-diagram { display: flex; flex-direction: column; gap: 0; }
+
+.beck-box {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius);
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.beck-box-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.beck-box-content { font-size: 12.5px; color: var(--text); line-height: 1.5; }
+
+.beck-arrow { text-align: center; color: var(--text-4); margin: 2px 0; font-size: 14px; }
+
+.beck-triple {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.beck-triple .beck-box { margin-bottom: 0; }
+
+.distortion-card {
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+}
+.distortion-card-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+.distortion-name { font-size: 13px; font-weight: 540; }
+.distortion-en { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+.distortion-count {
+  margin-left: auto;
+  font-size: 10.5px;
+  background: var(--distortion-bg);
+  color: var(--distortion);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.distortion-quote {
+  font-size: 12px;
+  color: var(--text-2);
+  font-style: italic;
+  border-left: 2px solid var(--distortion-bg);
+  padding-left: 8px;
+  margin-top: 6px;
+  font-family: var(--serif);
+}
+
+.tech-group { margin-bottom: 16px; }
+.tech-group-h {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.tech-card {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tech-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.tech-card-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.tech-name { font-size: 12.5px; font-weight: 540; }
+.tech-en { font-size: 10.5px; color: var(--text-3); font-family: var(--mono); }
+.tech-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.4; }
+.tech-source { margin-top: 4px; font-size: 10.5px; color: var(--text-3); font-family: var(--mono); }
+
+.smer-table { display: flex; flex-direction: column; gap: 8px; }
+.smer-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+.smer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.smer-cell-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 600; margin-bottom: 2px; }
+.smer-cell-val { font-size: 12px; color: var(--text); line-height: 1.4; }
+.smer-full { grid-column: 1 / -1; }
+
+.smer-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.smer-empty-action {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.scale-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.scale-row:last-child { border-bottom: none; }
+.scale-name { width: 80px; flex: 0 0 80px; font-size: 12.5px; font-weight: 540; }
+.scale-en { font-size: 11px; color: var(--text-3); font-family: var(--mono); display: block; font-weight: 400; }
+.scale-bar { flex: 1; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.scale-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.scale-val { font-family: var(--mono); font-size: 12px; font-weight: 600; min-width: 38px; text-align: right; }
+.scale-val-meta { font-size: 10.5px; color: var(--text-3); font-family: var(--mono); display: block; text-align: right; font-weight: 400; }
+
+.notes-area {
+  width: 100%;
+  min-height: 280px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.55;
+  resize: vertical;
+  font-family: var(--sans);
+  outline: none;
+}
+.notes-area:focus { border-color: var(--text-3); }
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 540;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.right-content::-webkit-scrollbar,
+.chat-scroll::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar { width: 8px; }
+.right-content::-webkit-scrollbar-thumb,
+.chat-scroll::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+.right-content::-webkit-scrollbar-track,
+.chat-scroll::-webkit-scrollbar-track,
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+
+.review-card {
+  margin: 16px 0;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, #FEFCF7 0%, var(--surface) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.review-h { font-family: var(--serif); font-size: 19px; letter-spacing: -0.015em; font-weight: 500; margin: 0 0 4px; }
+.review-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 14px; }
+.review-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.review-metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+.review-metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 600; margin-bottom: 4px; }
+.review-metric-val { font-family: var(--mono); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.review-section { margin-bottom: 14px; }
+.review-section-h { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 600; margin-bottom: 6px; }
+.review-list { margin: 0; padding-left: 18px; }
+.review-list li { font-size: 13px; line-height: 1.5; margin-bottom: 4px; }
+
+.empty-state { padding: 28px 16px; text-align: center; color: var(--text-3); font-size: 12.5px; }
+
+.error-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--warn-soft);
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: 0.06em;
+}
+
+.modal-demo-btn {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  color: var(--text-2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+  margin-top: 8px;
+}
+.modal-demo-btn:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-2); }
+
+.end-session-btn {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.12s;
+}
+.end-session-btn:hover { border-color: var(--border-strong); color: var(--text); }
+
+.key-btn {
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.12s;
+}
+.key-btn:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ============ MODE SWITCHER ============ */
+
+.mode-switcher {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.mode-btn {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 5px;
+  color: var(--text-3);
+  transition: all 0.12s;
+}
+.mode-btn:hover { color: var(--text); }
+.mode-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============ CONTEXT MENU / CASE ITEMS ============ */
+
+.case-item {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+  position: relative;
+}
+.case-item:hover { background: var(--surface-hover); }
+.case-item.active { background: var(--surface); box-shadow: var(--shadow-sm); }
+
+.case-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.case-menu-btn {
+  opacity: 0;
+  padding: 4px 7px;
+  font-size: 14px;
+  color: var(--text-3);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: opacity 0.12s, background 0.12s;
+  line-height: 1;
+}
+.case-item:hover .case-menu-btn { opacity: 1; }
+.case-menu-btn.open { opacity: 1; background: var(--surface-hover); }
+.case-menu-btn:hover { color: var(--text); }
+
+.context-menu {
+  position: absolute;
+  right: 4px;
+  top: calc(100% + 2px);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  min-width: 140px;
+  overflow: hidden;
+}
+.context-menu-item {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.1s;
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.context-menu-item:hover { background: var(--surface-2); }
+.context-menu-item.danger { color: var(--warn); }
+
+/* ============ NEW CLIENT BUTTON ============ */
+
+.new-client-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-3);
+  font-size: 12.5px;
+  width: 100%;
+  margin-top: 6px;
+  transition: all 0.12s;
+}
+.new-client-btn:hover { border-color: var(--text-3); color: var(--text); background: var(--surface-hover); }
+
+/* ============ ARCHIVE SECTION ============ */
+
+.archive-section {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+}
+.archive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 4px 0;
+  width: 100%;
+  text-align: left;
+}
+.archive-toggle:hover { color: var(--text-2); }
+.archive-toggle-arrow { margin-left: auto; font-size: 10px; transition: transform 0.15s; }
+.archive-toggle-arrow.open { transform: rotate(90deg); }
+.archive-badge {
+  background: var(--border-strong);
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 5px;
+  border-radius: 999px;
+  min-width: 16px;
+  display: inline-grid;
+  place-items: center;
+  height: 14px;
+}
+
+/* ============ NEW CLIENT MODAL FORM ============ */
+
+.form-field { margin-bottom: 16px; }
+.form-field:last-child { margin-bottom: 0; }
+.form-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+.form-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+.form-select:focus { border-color: var(--text-3); }
+.form-range { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.form-radio-group { display: flex; gap: 6px; }
+.form-radio-btn {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text-2);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.form-radio-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.form-radio-btn.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* ============ GESTALT TABS ============ */
+
+.cycle-viz {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+.cycle-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s;
+  min-width: 52px;
+  flex-shrink: 0;
+}
+.cycle-node:hover { background: var(--surface-2); }
+.cycle-node.active { background: var(--accent-soft); }
+.cycle-node-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--border-strong);
+  display: grid; place-items: center;
+  font-size: 10px; color: var(--text-3);
+  transition: all 0.12s;
+}
+.cycle-node.active .cycle-node-dot { background: var(--accent); color: white; }
+.cycle-node-name { font-size: 10px; font-weight: 500; text-align: center; color: var(--text-2); }
+.cycle-node.active .cycle-node-name { color: var(--accent); }
+.cycle-node-en { font-size: 9px; color: var(--text-4); text-align: center; font-family: var(--mono); }
+.cycle-arrow { color: var(--text-4); font-size: 12px; flex-shrink: 0; }
+
+.phenom-field { margin-bottom: 10px; }
+.phenom-label { font-size: 11px; color: var(--text-3); font-weight: 500; margin-bottom: 3px; }
+.phenom-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  resize: none;
+}
+.phenom-input:focus { border-color: var(--text-3); }
+.contact-level-btns { display: flex; gap: 4px; margin-top: 4px; }
+.contact-level-btn {
+  width: 28px; height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px; font-weight: 500;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.contact-level-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.contact-level-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.situation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+.situation-check {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-strong);
+  display: grid; place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.12s;
+}
+.situation-check.resolved { background: var(--success); border-color: var(--success); color: white; font-size: 10px; }
+.situation-text { font-size: 12.5px; flex: 1; line-height: 1.4; }
+.situation-text.resolved { text-decoration: line-through; color: var(--text-3); }
+.situation-date { font-size: 10.5px; color: var(--text-4); font-family: var(--mono); }
+
+/* ============ INTEGRATIVE TABS ============ */
+
+.approach-bars { margin-top: 6px; }
+.approach-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.approach-label { font-size: 11.5px; color: var(--text-2); width: 100px; flex-shrink: 0; }
+.approach-bar { flex: 1; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.approach-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.approach-count-num { font-family: var(--mono); font-size: 11px; color: var(--text-3); width: 24px; text-align: right; }
+.approach-badge {
+  display: inline-flex; align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px; font-weight: 500;
+  font-family: var(--mono);
+}
+.approach-badge.cbt { background: var(--accent-soft); color: var(--accent); }
+.approach-badge.gestalt { background: var(--warn-soft); color: var(--warm); }
+.approach-badge.psychodynamic { background: #F3E8FF; color: #7C3AED; }
+.approach-badge.humanistic { background: var(--success-soft); color: var(--success); }
+
+/* ============ MOBILE BASE (hidden on desktop) ============ */
+.mobile-tabbar { display: none; }
+.mobile-settings-btn { display: none; }
+.inline-feedback-toggle { display: none; font-size: 10.5px; color: var(--text-3); margin-left: auto; padding: 2px 4px; }
+.inline-feedback-body { display: flex; flex-direction: column; gap: 6px; }
+
+/* ============ MOBILE ≤768px ============ */
+@media (max-width: 768px) {
+
+  html { overflow: hidden; }
+  body { min-width: 0 !important; overflow: hidden; }
+  #root { height: 100%; overflow: hidden; }
+
+  .app {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    min-width: 0 !important;
+    height: 100dvh;
+    height: 100svh;
+    height: -webkit-fill-available;
+  }
+
+  /* Panel visibility */
+  .sidebar, .main, .right-panel { display: none; }
+  .sidebar.mobile-visible { display: flex; flex: 1; min-height: 0; width: 100%; border-right: none; }
+  .main.mobile-visible   { display: flex; flex: 1; min-height: 0; width: 100%; }
+  .right-panel.mobile-visible { display: flex; flex: 1; min-height: 0; width: 100%; border-left: none; }
+
+  /* Bottom tabbar */
+  .mobile-tabbar {
+    display: flex;
+    flex-shrink: 0;
+    height: 58px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 20;
+  }
+  .mobile-tab-btn {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text-3);
+    letter-spacing: 0.01em;
+    padding: 6px 0;
+    border-radius: 0;
+    transition: color 0.12s;
+  }
+  .mobile-tab-btn.active { color: var(--accent); }
+  .mobile-tab-btn-icon { font-size: 20px; line-height: 1; }
+
+  /* Mobile header */
+  .main-header { padding: 10px 12px 10px 16px; min-height: 52px; flex-wrap: nowrap; gap: 8px; }
+  .main-header .stage-pill { display: none; }
+  .main-header .mode-switcher { display: none; }
+  .main-header .timer { display: none; }
+  .main-header .end-session-btn { display: none; }
+  .main-header .demo-badge { font-size: 10px; padding: 2px 7px; }
+
+  .mobile-settings-btn {
+    display: flex; align-items: center; justify-content: center;
+    margin-left: auto; flex-shrink: 0;
+    width: 38px; height: 38px;
+    font-size: 18px;
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+  }
+  .mobile-settings-btn:active { background: var(--surface-2); }
+
+  /* Chat */
+  .chat-inner { padding: 0 12px; gap: 14px; }
+  .chat-scroll { padding-bottom: 8px; }
+  .msg { gap: 8px; }
+  .msg-avatar { width: 26px; height: 26px; font-size: 9px; flex: 0 0 26px; border-radius: 6px; }
+  .msg-text { font-size: 14px; }
+
+  /* Collapsible inline feedback */
+  .inline-feedback-toggle { display: inline-flex; }
+  .inline-feedback { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .inline-feedback.collapsed .inline-feedback-body { display: none; }
+
+  /* Composer */
+  .composer { padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .composer-inner { max-width: 100%; }
+  .composer textarea { font-size: 16px; min-height: 42px; }
+  .composer-techniques {
+    flex-wrap: nowrap;
+    overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    gap: 4px; flex: 1; min-width: 0;
+  }
+  .composer-techniques::-webkit-scrollbar { display: none; }
+  .tech-chip { flex-shrink: 0; }
+  .send-btn { min-height: 44px; padding: 0 16px; font-size: 13.5px; flex-shrink: 0; }
+  .send-btn kbd { display: none; }
+
+  /* Right panel */
+  .right-tabs { padding: 8px 8px 0; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; gap: 0; -webkit-overflow-scrolling: touch; }
+  .right-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { flex-shrink: 0; padding: 7px 9px; }
+  .panel-section { padding: 14px 14px; }
+  .panel-h2 { font-size: 16px; }
+
+  /* Sidebar */
+  .sidebar { overflow-y: auto; overflow-x: hidden; }
+  .sidebar-section { flex-shrink: 0; }
+  .sidebar-section[style] { flex: initial !important; overflow-y: visible !important; }
+  .case-item-main { padding: 10px 8px; }
+  .archive-section { flex-shrink: 0; }
+  .sidebar-footer { flex-shrink: 0; margin-top: 0 !important; }
+
+  /* Modals → bottom sheets */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    width: 100%; max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 8px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    max-height: 92svh; max-height: 92vh;
+    overflow-y: auto;
+  }
+  .modal::before {
+    content: '';
+    display: block; width: 36px; height: 4px;
+    background: var(--border-strong); border-radius: 2px;
+    margin: 8px auto 20px;
+  }
+
+  /* Mobile settings sheet */
+  .mobile-settings-sheet { position: fixed; inset: 0; z-index: 200; }
+  .mobile-settings-backdrop { position: absolute; inset: 0; background: rgba(20,20,18,0.45); backdrop-filter: blur(2px); }
+  .mobile-settings-panel {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mobile-settings-handle { width: 36px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 12px auto 4px; }
+  .mobile-settings-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); padding: 12px 20px 6px; }
+  .mobile-mode-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; font-size: 15px;
+    width: 100%; text-align: left; border-radius: 0;
+    transition: background 0.1s;
+  }
+  .mobile-mode-row:active { background: var(--surface-2); }
+  .mobile-mode-row.active { color: var(--accent); font-weight: 500; }
+  .mobile-mode-check { margin-left: auto; font-size: 15px; color: var(--accent); }
+  .mobile-end-session-row {
+    display: block; margin: 8px 16px 16px;
+    padding: 14px; width: calc(100% - 32px);
+    background: var(--warn-soft); color: var(--warn);
+    border-radius: var(--radius);
+    font-size: 14px; font-weight: 500; text-align: center;
+  }
+  .mobile-end-session-row:active { opacity: 0.8; }
+  .mobile-settings-divider { height: 1px; background: var(--border); margin: 4px 0; }
+}
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ============ DATA ============
+
+window.CASES = [
+  {
+    id: 'maria', name: 'Мария К.', age: 28, avatar: 'МК', accent: '#D97757',
+    diagnosis: 'Депрессивный эпизод средней тяжести (F32.1)', diagnosisShort: 'Депрессия',
+    presenting: 'Не справляюсь с работой, постоянно чувствую усталость и никчёмность',
+    history: 'Маркетолог. 4 месяца назад повышение, через 2 месяца — упадок сил, бессонница, снижение продуктивности. Расставание с партнёром год назад. В семье у матери диагностировали депрессию в её возрасте.',
+    goals: [
+      'Снизить интенсивность подавленного настроения до 4/10',
+      'Восстановить регулярный сон (засыпание ≤ 30 мин)',
+      'Вернуть удовольствие от занятий — 3 активности в неделю',
+      'Завершить рабочий проект, который тянется 2 месяца'
+    ],
+    risk: 'Суицидальных мыслей нет. SI-screening: 0/4.',
+    medication: 'Сертралин 50 мг (выписан 2 недели назад)',
+    initialScales: { PHQ9: 17, GAD7: 9, mood: 3 },
+    sessions: [
+      { n: 1, stage: 'Первая сессия — сбор анамнеза и концептуализация', stageEn: 'Intake & case conceptualization', date: '12 мая', status: 'done', summary: 'Собран анамнез, поставлены цели, дано задание на мониторинг настроения и активностей.' },
+      { n: 2, stage: 'Поведенческая активация', stageEn: 'Behavioral activation', date: '19 мая', status: 'done', summary: 'Шкала активностей. Запланировано 3 приятных дела на неделю.' },
+      { n: 3, stage: 'Выявление автоматических мыслей', stageEn: 'Identifying automatic thoughts', date: 'сегодня', status: 'active', summary: 'Текущая сессия — обучение распознаванию АМ через ситуации недели.' },
+      { n: 4, stage: 'Сократический диалог', stageEn: 'Socratic questioning', date: '—', status: 'planned', summary: '' },
+      { n: 5, stage: 'Промежуточные убеждения', stageEn: 'Intermediate beliefs', date: '—', status: 'planned', summary: '' },
+      { n: 6, stage: 'Глубинные убеждения', stageEn: 'Core beliefs', date: '—', status: 'planned', summary: '' }
+    ],
+    opening: [
+      { role: 'system', text: 'Третья сессия. Мария зашла, выглядит уставшей, садится в кресло, смотрит в пол.' },
+      { role: 'client', text: 'Здравствуйте... Извините, что чуть позже. Я опять плохо спала, всю ночь крутилось в голове, что я не успеваю.', emotion: 'усталость, тревога', intensity: 70 }
+    ],
+    conceptualization: {
+      relevantData: 'Повышение → новые обязанности → ощущение «не тяну». Год назад — расставание.',
+      coreBeliefs: 'Я неполноценная / некомпетентная (гипотеза)',
+      intermediateBeliefs: '«Если я не справляюсь идеально — значит я провалилась». «Я должна делать всё сама, иначе подведу».',
+      compensatoryStrategies: 'Гиперработа → выгорание → избегание задач → самокритика',
+      situations: ['Новый проект на работе', 'Запрос обратной связи у руководителя', 'Утренний подъём'],
+      automaticThoughts: ['Я никогда не закончу это', 'Все видят, что я не справляюсь', 'Я подвожу команду'],
+      emotions: ['Подавленность 8/10', 'Тревога 6/10', 'Стыд 7/10'],
+      behaviors: ['Откладывание задач', 'Изоляция от коллег', 'Лежание в кровати']
+    }
+  },
+  {
+    id: 'andrey', name: 'Андрей В.', age: 34, avatar: 'АВ', accent: '#2A6FDB',
+    diagnosis: 'Паническое расстройство (F41.0)', diagnosisShort: 'Паническое расстройство',
+    presenting: 'Боюсь, что у меня инфаркт. Уже четыре раза вызывал скорую за два месяца.',
+    history: 'IT-менеджер. Первая паническая атака — в метро, 3 месяца назад. С тех пор избегает метро, кофе, физических нагрузок. Снижение круга активности.',
+    goals: ['Понять, что паническая атака не опасна', 'Вернуться к поездкам в метро', 'Перестать постоянно проверять пульс'],
+    risk: 'Нет.', medication: 'Нет.',
+    initialScales: { PHQ9: 8, GAD7: 16, mood: 5 },
+    sessions: [{ n: 1, stage: 'Психообразование о тревоге', stageEn: 'Psychoeducation', date: '—', status: 'active', summary: '' }],
+    opening: [
+      { role: 'system', text: 'Первая сессия. Андрей сидит на краю кресла, периодически прикладывает руку к запястью — проверяет пульс.' },
+      { role: 'client', text: 'Послушайте, я уже у трёх кардиологов был. Все говорят — сердце здоровое. Но я-то чувствую! Вчера снова — пульс 130, голова закружилась, думал — всё.', emotion: 'тревога', intensity: 75 }
+    ],
+    conceptualization: {
+      relevantData: 'ПА в метро → катастрофизация телесных ощущений → избегание.',
+      coreBeliefs: 'Мир опасен / я уязвим (гипотеза)',
+      intermediateBeliefs: '«Если у меня учащается сердцебиение — это сердечный приступ»',
+      compensatoryStrategies: 'Проверки пульса, избегание триггеров, "безопасное поведение"',
+      situations: ['Поездка в метро', 'Подъём по лестнице', 'Чашка кофе'],
+      automaticThoughts: ['Сейчас будет инфаркт', 'Я потеряю сознание и упаду', 'Никто не поможет'],
+      emotions: ['Тревога 9/10', 'Страх 9/10'],
+      behaviors: ['Проверка пульса 30+ раз в день', 'Избегание метро', 'Звонки скорой']
+    }
+  },
+  {
+    id: 'olga', name: 'Ольга Р.', age: 22, avatar: 'ОР', accent: '#7C3AED',
+    diagnosis: 'Социальное тревожное расстройство (F40.1)', diagnosisShort: 'Социальная тревога',
+    presenting: 'Не могу выступать на семинарах, краснею перед людьми, избегаю компаний.',
+    history: 'Студентка магистратуры. С подросткового возраста стеснительная. В школе высмеяли за неудачный ответ — с тех пор страх публичных выступлений усилился.',
+    goals: ['Выступить на семинаре без паники', 'Сходить на день рождения друга', 'Снизить избегание социальных ситуаций'],
+    risk: 'Нет.', medication: 'Нет.',
+    initialScales: { PHQ9: 6, GAD7: 13, mood: 5 },
+    sessions: [{ n: 1, stage: 'Концептуализация и иерархия экспозиций', stageEn: 'Conceptualization & exposure hierarchy', date: '—', status: 'active', summary: '' }],
+    opening: [
+      { role: 'system', text: 'Первая сессия. Ольга говорит тихо, прячет руки в рукава свитера.' },
+      { role: 'client', text: 'Я... наверное, глупо что я пришла. Многим хуже. Просто мне через месяц защищать диплом, а я даже на семинаре двух слов не могу сказать — все смотрят, я краснею...', emotion: 'стыд, тревога', intensity: 65 }
+    ],
+    conceptualization: {
+      relevantData: 'Эпизод в школе → формирование убеждения о социальной опасности.',
+      coreBeliefs: 'Я никчёмная / меня осудят (гипотеза)',
+      intermediateBeliefs: '«Если я покажусь неуверенной — все поймут, что я глупая»',
+      compensatoryStrategies: 'Избегание публичных выступлений, молчание в группах',
+      situations: ['Семинар', 'Знакомство с новым человеком', 'Звонок по телефону'],
+      automaticThoughts: ['Все увидят, что я нервничаю', 'Я скажу глупость', 'Они подумают, что я тупая'],
+      emotions: ['Тревога 8/10', 'Стыд 7/10'],
+      behaviors: ['Пропуск семинаров', 'Отказ от вечеринок', 'Молчание']
+    }
+  },
+  {
+    id: 'dmitry', name: 'Дмитрий П.', age: 41, avatar: 'ДП', accent: '#1F8A5B',
+    diagnosis: 'Прокрастинация / трудоголизм + дисфория', diagnosisShort: 'Прокрастинация',
+    presenting: 'Откладываю важные проекты, потом работаю по 14 часов и ненавижу себя.',
+    history: 'Архитектор-фрилансер. Цикл: берёт проект → откладывает → дедлайн → марафон → выгорание → опять прокрастинация.',
+    goals: ['Работать равномерно, без авралов', 'Перестать корить себя за каждый перерыв', 'Сдавать проекты вовремя'],
+    risk: 'Нет.', medication: 'Нет.',
+    initialScales: { PHQ9: 11, GAD7: 10, mood: 4 },
+    sessions: [{ n: 1, stage: 'Концептуализация цикла прокрастинации', stageEn: 'Procrastination cycle', date: '—', status: 'active', summary: '' }],
+    opening: [
+      { role: 'system', text: 'Первая сессия. Дмитрий говорит быстро, иронично.' },
+      { role: 'client', text: 'Ну что, доктор, у меня всё плохо. Снова просрал дедлайн, неделю не вылезал из работы, теперь смотрю на новый проект — и опять не могу начать. Видимо, я просто ленивый, да?', emotion: 'самокритика', intensity: 55 }
+    ],
+    conceptualization: {
+      relevantData: 'Перфекционистское воспитание → страх несовершенного результата → избегание.',
+      coreBeliefs: 'Я недостаточно хорош (гипотеза)',
+      intermediateBeliefs: '«Если я не сделаю идеально — лучше не делать вообще»',
+      compensatoryStrategies: 'Прокрастинация → дедлайн-марафон → самонаказание',
+      situations: ['Начало нового проекта', 'Открытие почты с правками', 'Звонок заказчику'],
+      automaticThoughts: ['У меня не получится так, как надо', 'Я подведу клиента', 'Я ленивый идиот'],
+      emotions: ['Тревога 7/10', 'Стыд 6/10', 'Дисфория 6/10'],
+      behaviors: ['Бесконечный скроллинг', 'Откладывание задач', 'Работа ночами']
+    }
+  }
+];
+
+window.DISTORTIONS = [
+  { id: 'allornothing', name: 'Чёрно-белое мышление', en: 'All-or-nothing thinking', desc: 'Мир видится в крайностях: либо идеально, либо провал.', example: '«Если я не сделаю идеально — значит, провалилась»' },
+  { id: 'catastrophizing', name: 'Катастрофизация', en: 'Catastrophizing', desc: 'Предсказание худшего исхода без учёта более вероятных вариантов.', example: '«У меня инфаркт прямо сейчас»' },
+  { id: 'mindreading', name: 'Чтение мыслей', en: 'Mind reading', desc: 'Убеждённость, что знаете, что думают другие, без достаточных оснований.', example: '«Все видят, что я не справляюсь»' },
+  { id: 'fortunetelling', name: 'Предсказание будущего', en: 'Fortune telling', desc: 'Уверенность в негативном исходе без доказательств.', example: '«Я завалю защиту»' },
+  { id: 'overgeneralization', name: 'Сверхобобщение', en: 'Overgeneralization', desc: 'Один негативный случай → правило на всю жизнь.', example: '«У меня никогда ничего не получится»' },
+  { id: 'mentalfilter', name: 'Ментальный фильтр', en: 'Mental filter', desc: 'Фокус только на негативном, игнорирование позитивного.', example: '«Шеф похвалил, но один коллега зевнул — значит, я плохо выступила»' },
+  { id: 'disqualifying', name: 'Обесценивание позитивного', en: 'Disqualifying the positive', desc: 'Хорошее «не считается».', example: '«Мне просто повезло, это случайность»' },
+  { id: 'emotionalreasoning', name: 'Эмоциональное обоснование', en: 'Emotional reasoning', desc: '«Я чувствую → значит, это правда».', example: '«Я чувствую себя виноватой — значит, я виновата»' },
+  { id: 'shoulds', name: 'Долженствование', en: '"Should" statements', desc: 'Жёсткие правила «должен/обязан».', example: '«Я должна быть идеальной матерью»' },
+  { id: 'labeling', name: 'Ярлыки', en: 'Labeling', desc: 'Ярлык вместо описания поведения.', example: '«Я неудачник», «Я ленивый идиот»' },
+  { id: 'personalization', name: 'Персонализация', en: 'Personalization', desc: 'Принятие ответственности за то, на что нет влияния.', example: '«Команда не успела — это из-за меня»' },
+  { id: 'magnification', name: 'Преувеличение/преуменьшение', en: 'Magnification/Minimization', desc: 'Раздувание негативного, уменьшение позитивного.', example: '«Ошибся в письме — это катастрофа»' },
+  { id: 'blaming', name: 'Обвинение', en: 'Blaming', desc: 'Перекладывание всей ответственности на других или на себя.', example: '«Это всё родители виноваты»' },
+  { id: 'whatif', name: '«А что если...»', en: '"What if" thinking', desc: 'Цепочка гипотетических катастроф.', example: '«А что если я упаду в обморок? А что если никто не поможет?»' }
+];
+
+window.TECHNIQUES = [
+  { cat: 'Структура сессии', items: [
+    { name: 'Установка повестки', en: 'Agenda setting', desc: 'В начале сессии: что обсудим сегодня? Что важно для клиента?', source: 'Бек, гл. 4' },
+    { name: 'Проверка настроения', en: 'Mood check', desc: 'Объективная (шкалы) + субъективная оценка с прошлой сессии.', source: 'Бек, гл. 4' },
+    { name: 'Мост к прошлой сессии', en: 'Bridge from last session', desc: '«Что было важного с прошлой встречи? Что вы взяли из неё?»', source: 'Бек, гл. 4' },
+    { name: 'Подведение итогов', en: 'Summary', desc: 'Периодические резюме того, что услышали; запрос на обратную связь.', source: 'Бек, гл. 4' },
+    { name: 'Обратная связь', en: 'Eliciting feedback', desc: 'В конце: «Что было полезного? Что вас задело? Что хотите изменить?»', source: 'Бек, гл. 4' }
+  ]},
+  { cat: 'Когнитивные техники', items: [
+    { name: 'Сократический диалог', en: 'Socratic dialogue', desc: 'Цепочка открытых вопросов, помогающих клиенту самому увидеть искажение.', source: 'Бек, гл. 11' },
+    { name: 'Направляемое открытие', en: 'Guided discovery', desc: 'Терапевт не даёт ответы, а помогает клиенту прийти к ним самому.', source: 'Бек, гл. 11' },
+    { name: 'Проверка доказательств', en: 'Examining evidence', desc: '«Какие факты "за" эту мысль? Какие "против"?»', source: 'Лихи, гл. 2' },
+    { name: 'Декатастрофизация', en: 'Decatastrophizing', desc: '«Что самое худшее? Что самое лучшее? Что наиболее вероятно?»', source: 'Лихи, гл. 2' },
+    { name: 'Реатрибуция', en: 'Reattribution', desc: 'Анализ всех факторов, влияющих на ситуацию, кроме одного клиента.', source: 'Бек, гл. 12' },
+    { name: 'Двойной стандарт', en: 'Double standard', desc: '«Что бы вы сказали другу в такой же ситуации?»', source: 'Лихи, гл. 2' },
+    { name: 'Стрелка вниз', en: 'Downward arrow', desc: '«А если это правда — что это значит? И что тогда?» — выход на глубинное убеждение.', source: 'Бек, гл. 13' },
+    { name: 'Запись АМ (СМЭР)', en: 'Thought record', desc: 'Ситуация → Мысль → Эмоция → Реакция; для оспаривания мыслей.', source: 'Бек, гл. 9' }
+  ]},
+  { cat: 'Поведенческие техники', items: [
+    { name: 'Поведенческая активация', en: 'Behavioral activation', desc: 'Планирование приятных и значимых активностей при депрессии.', source: 'Бек, гл. 7' },
+    { name: 'Шкала активностей', en: 'Activity scheduling', desc: 'Запись активностей с оценкой удовольствия и мастерства.', source: 'Бек, гл. 7' },
+    { name: 'Поведенческий эксперимент', en: 'Behavioral experiment', desc: 'Проверка прогноза АМ через реальное действие.', source: 'Бек, гл. 14' },
+    { name: 'Экспозиция', en: 'Exposure', desc: 'Постепенное столкновение со страшащей ситуацией.', source: 'Лихи, гл. 8' },
+    { name: 'Решение проблем', en: 'Problem solving', desc: '6 шагов: определение → варианты → оценка → выбор → реализация → ревизия.', source: 'Бек, гл. 16' }
+  ]},
+  { cat: 'Эмпатия и альянс', items: [
+    { name: 'Эмпатическое отражение', en: 'Empathic reflection', desc: 'Возврат клиенту его чувств в его словах.', source: 'Бек, гл. 5' },
+    { name: 'Валидация', en: 'Validation', desc: 'Признание, что реакция понятна в её контексте.', source: 'Лихи, гл. 1' },
+    { name: 'Нормализация', en: 'Normalization', desc: '«Многие люди в такой ситуации чувствуют...»', source: 'Бек, гл. 5' }
+  ]}
+];
+</script>
+
+<script>
+window.GESTALT_MECHANISMS = [
+  { id: 'introjection', name: 'Интроекция', en: 'Introjection', desc: 'Поглощение чужих правил без переработки.' },
+  { id: 'projection', name: 'Проекция', en: 'Projection', desc: 'Приписывание своих переживаний другим.' },
+  { id: 'retroflection', name: 'Ретрофлексия', en: 'Retroflection', desc: 'Направление чувств/действий на себя.' },
+  { id: 'deflection', name: 'Дефлексия', en: 'Deflection', desc: 'Избегание прямого контакта через отвлечение.' },
+  { id: 'confluence', name: 'Конфлюэнция', en: 'Confluence', desc: 'Слияние: потеря границ между я и другим.' },
+  { id: 'egotism', name: 'Эготизм', en: 'Egotism', desc: 'Избыточный самоконтроль, прерывание спонтанного контакта.' }
+];
+
+window.GESTALT_TECHNIQUES = [
+  { name: 'Пустой стул', en: 'Empty Chair', desc: 'Диалог с воображаемым другим или частью себя — для завершения незаконченных ситуаций.', source: 'Перлз' },
+  { name: 'Здесь-и-сейчас', en: 'Here and Now', desc: 'Возвращение к настоящему моменту: «Что происходит прямо сейчас?»', source: 'Перлз/Польстер' },
+  { name: 'Работа с телом', en: 'Body Work', desc: 'Осознание телесных ощущений, дыхания, позы как отражения эмоционального состояния.', source: 'Польстер' },
+  { name: 'Полярности', en: 'Polarities', desc: 'Исследование противоположных частей личности (например, «сильный я» и «беспомощный я»).', source: 'Перлз' },
+  { name: 'Незавершённые ситуации', en: 'Unfinished Business', desc: 'Выявление и завершение незакрытых гештальтов — прерванных переживаний прошлого.', source: 'Перлз' },
+  { name: 'Преувеличение', en: 'Exaggeration', desc: 'Усиление жеста, позы или слова для углубления осознания.', source: 'Польстер' },
+  { name: 'Эксперимент', en: 'Experiment', desc: 'Предложение попробовать что-то новое прямо в сессии — новую роль, способ говорить или двигаться.', source: 'Польстер' },
+  { name: 'Мечтание вслух', en: 'Dreamwork', desc: 'Работа со снами: разыгрывание их элементов как частей себя.', source: 'Перлз' }
+];
+
+// ============ API KEY STORAGE ============
+
+window.getApiKey = () => localStorage.getItem('anthropic_api_key') || '';
+window.setApiKey = (k) => localStorage.setItem('anthropic_api_key', k);
+
+// ============ AI BRIDGE ============
+
+window.generateNewClient = async function({ gender, age, diagnosis, difficulty }) {
+  const apiKey = window.getApiKey();
+  if (!apiKey) throw new Error('NO_API_KEY');
+  const diffMap = { beginner: 'Начинающий терапевт — клиент открытый, несложный', medium: 'Средний уровень — умеренное сопротивление', advanced: 'Продвинутый — сильное сопротивление, сложный характер' };
+  const prompt = `Создай профиль клиента для тренажёра КПТ-терапевта.\nПараметры: Пол: ${gender === 'M' ? 'мужчина' : 'женщина'}, Возраст: ${age}, Диагноз: ${diagnosis}, Уровень сложности: ${diffMap[difficulty] || difficulty}\n\nВерни СТРОГО JSON (без markdown):\n{"id":"уникальный_латиницей_id","name":"Имя Ф.","age":${age},"avatar":"ИФ","accent":"#D97757","diagnosis":"Полный диагноз МКБ","diagnosisShort":"Кратко","presenting":"Жалоба","history":"2-3 предложения","goals":["Цель 1","Цель 2","Цель 3"],"risk":"Описание.","medication":"Нет.","initialScales":{"PHQ9":12,"GAD7":10,"mood":5},"sessions":[{"n":1,"stage":"Первая сессия","stageEn":"Session 1","date":"—","status":"active","summary":""},{"n":2,"stage":"Сессия 2","stageEn":"Session 2","date":"—","status":"planned","summary":""},{"n":3,"stage":"Сессия 3","stageEn":"Session 3","date":"—","status":"planned","summary":""},{"n":4,"stage":"Сессия 4","stageEn":"Session 4","date":"—","status":"planned","summary":""},{"n":5,"stage":"Сессия 5","stageEn":"Session 5","date":"—","status":"planned","summary":""},{"n":6,"stage":"Сессия 6","stageEn":"Session 6","date":"—","status":"planned","summary":""}],"opening":[{"role":"system","text":"Описание сцены."},{"role":"client","text":"Первая реплика клиента.","emotion":"тревога","intensity":65}],"conceptualization":{"relevantData":"...","coreBeliefs":"...","intermediateBeliefs":"...","compensatoryStrategies":"...","situations":["...","...","..."],"automaticThoughts":["...","...","..."],"emotions":["...","..."],"behaviors":["...","..."]}}\nИспользуй один из accent: #D97757, #2A6FDB, #7C3AED, #1F8A5B, #E11D48, #0891B2, #D97706`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  let raw = (data.content?.[0]?.text || '').trim();
+  if (raw.startsWith('```')) raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
+  const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
+  if (i >= 0 && j > i) raw = raw.slice(i, j + 1);
+  return window.sanitizeClient(JSON.parse(raw));
+};
+
+window.sanitizeClient = function(c) {
+  c = c || {};
+  return {
+    id: c.id || 'gen_' + Date.now(),
+    name: c.name || 'Новый клиент',
+    age: c.age || 30,
+    avatar: c.avatar || 'НК',
+    accent: c.accent || '#2A6FDB',
+    diagnosis: c.diagnosis || 'Тревожное расстройство',
+    diagnosisShort: c.diagnosisShort || 'Тревога',
+    presenting: c.presenting || '',
+    history: c.history || '',
+    goals: Array.isArray(c.goals) ? c.goals : [],
+    risk: c.risk || 'Нет.', medication: c.medication || 'Нет.',
+    initialScales: { PHQ9: 10, GAD7: 10, mood: 5, ...(c.initialScales || {}) },
+    sessions: Array.isArray(c.sessions) && c.sessions.length === 6 ? c.sessions :
+      Array.from({ length: 6 }, (_, i) => ({ n: i+1, stage: `Сессия ${i+1}`, stageEn: `Session ${i+1}`, date: '—', status: i === 0 ? 'active' : 'planned', summary: '' })),
+    opening: Array.isArray(c.opening) && c.opening.length >= 2 ? c.opening :
+      [{ role: 'system', text: 'Начало первой сессии.' }, { role: 'client', text: 'Здравствуйте.', emotion: 'нейтральное', intensity: 50 }],
+    conceptualization: {
+      relevantData: c.conceptualization?.relevantData || '',
+      coreBeliefs: c.conceptualization?.coreBeliefs || '',
+      intermediateBeliefs: c.conceptualization?.intermediateBeliefs || '',
+      compensatoryStrategies: c.conceptualization?.compensatoryStrategies || '',
+      situations: c.conceptualization?.situations || [],
+      automaticThoughts: c.conceptualization?.automaticThoughts || [],
+      emotions: c.conceptualization?.emotions || [],
+      behaviors: c.conceptualization?.behaviors || []
+    }
+  };
+};
+
+window.aiClientTurn = async function({ caseData, history, therapistMsg, sessionStage, mode }) {
+  const apiKey = window.getApiKey();
+  if (!apiKey) throw new Error('NO_API_KEY');
+  mode = mode || 'cbt';
+
+  const isGestalt = mode === 'gestalt';
+  const isIntegrative = mode === 'integrative';
+  const approach = isGestalt ? 'гештальт-терапии' : isIntegrative ? 'интегративной терапии' : 'когнитивно-поведенческой терапии';
+
+  const prompt = `Ты играешь роль клиента на сессии ${approach}.
+
+ПРОФИЛЬ КЛИЕНТА:
+Имя: ${caseData.name}, ${caseData.age} лет
+Диагноз: ${caseData.diagnosis}
+Жалоба: ${caseData.presenting}
+История: ${caseData.history}
+Ключевые автоматические мысли: ${caseData.conceptualization.automaticThoughts.join('; ')}
+Глубинное убеждение (гипотеза): ${caseData.conceptualization.coreBeliefs}
+Промежуточные убеждения: ${caseData.conceptualization.intermediateBeliefs}
+Поведенческие стратегии: ${caseData.conceptualization.compensatoryStrategies}
+
+ТЕКУЩАЯ СТАДИЯ СЕССИИ: ${sessionStage}
+
+ПРАВИЛА:
+- Отвечай ТОЛЬКО как клиент. Не пиши "Терапевт:", не комментируй сеанс со стороны.
+- Говори естественно, по-русски, как обычный человек: с паузами, иногда сбивчиво, с эмоциями.
+- Реплика 1–4 предложения. Не лекция.${isGestalt ? '\n- Упоминай телесные ощущения, дыхание, напряжение — где именно что чувствуется.\n- Прерывания контакта (интроекция, проекция, ретрофлексия, дефлексия) должны проявляться в речи.' : '\n- Когнитивные искажения должны проявляться в речи (катастрофизация, чёрно-белое, чтение мыслей и т.д.).'}
+- Если терапевт использует хорошую технику — реагируй немного открываясь, но не сразу "исцеляйся". Изменения медленные.
+- Если терапевт даёт совет, осуждает, спорит — реагируй защитой или замиранием.
+- Иногда сопротивляйся, иногда плачь, иногда отшучивайся — в характере клиента.
+
+ОЦЕНКА ТЕРАПЕВТА:
+Оцени реплику терапевта${isGestalt ? ' по школе Перлза и Польстера' : isIntegrative ? ' с точки зрения интегративного подхода' : ' по школе Бек и Лихи'}:
+- technique: техника использована (или "—")
+- empathy: 0-100
+- accuracy: 0-100, корректность для текущей стадии
+- score: "good"|"ok"|"warn"
+- hint: 1–2 предложения${isGestalt ? ' — что бы сделал Перлз/Польстер. Цитата или принцип.' : isIntegrative ? ' — как оценить интегративно.' : ' — что бы сделал Бек/Лихи. Конкретно.'}${isIntegrative ? '\n- approach: какой подход использован: "cbt"|"gestalt"|"psychodynamic"|"humanistic"' : ''}
+- distortions: ${isGestalt ? 'массив id механизмов прерывания контакта в речи клиента: introjection, projection, retroflection, deflection, confluence, egotism' : 'массив id когнитивных искажений в речи клиента: allornothing, catastrophizing, mindreading, fortunetelling, overgeneralization, mentalfilter, disqualifying, emotionalreasoning, shoulds, labeling, personalization, magnification, blaming, whatif'}${isGestalt ? '\n- contact_phase: где клиент в цикле опыта: "sensation"|"awareness"|"mobilization"|"action"|"contact"|"assimilation"' : ''}
+
+ИСТОРИЯ ДИАЛОГА:
+${history.filter(m => m.role !== 'system' && m.role !== 'feedback').slice(-12).map(m =>
+  m.role === 'therapist' ? `Терапевт: ${m.text}` : `Клиент (${caseData.name}): ${m.text}`
+).join('\n')}
+
+Терапевт: ${therapistMsg}
+
+Верни СТРОГО JSON (без markdown-обёртки):
+{
+  "client_reply": "...",
+  "emotion": "одно-два слова",
+  "intensity": 0-100,
+  "feedback": {
+    "technique": "...",${isIntegrative ? '\n    "approach": "cbt|gestalt|psychodynamic|humanistic",' : ''}
+    "empathy": 0-100,
+    "accuracy": 0-100,
+    "score": "good|ok|warn",
+    "hint": "..."
+  },
+  "distortions": ["id1", "id2"]${isGestalt ? ',\n  "contact_phase": "sensation|awareness|mobilization|action|contact|assimilation"' : ''}
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  let raw = data.content?.[0]?.text || '';
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
+  }
+  const i = cleaned.indexOf('{');
+  const j = cleaned.lastIndexOf('}');
+  if (i >= 0 && j > i) cleaned = cleaned.slice(i, j + 1);
+  return JSON.parse(cleaned);
+};
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+// ============ UTILS ============
+
+function timeNow() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+const CYCLE_PHASES = [
+  { id: 'sensation', name: 'Ощущение', en: 'Sensation', desc: 'Клиент замечает телесные ощущения или импульс.' },
+  { id: 'awareness', name: 'Осознание', en: 'Awareness', desc: 'Формирование фигуры из фона — ясное понимание потребности.' },
+  { id: 'mobilization', name: 'Мобилизация', en: 'Mobilization', desc: 'Энергия нарастает, появляется мотивация к действию.' },
+  { id: 'action', name: 'Действие', en: 'Action', desc: 'Движение навстречу среде, попытка удовлетворить потребность.' },
+  { id: 'contact', name: 'Контакт', en: 'Contact', desc: 'Полный контакт: встреча с объектом потребности.' },
+  { id: 'assimilation', name: 'Ассимиляция', en: 'Assimilation', desc: 'Интеграция опыта, отход, покой.' }
+];
+
+const TABS_BY_MODE = {
+  cbt: [
+    { id: 'card', label: 'Карточка' },
+    { id: 'conc', label: 'Концептуализация' },
+    { id: 'dist', label: 'Искажения', badgeKey: 'distortions' },
+    { id: 'tech', label: 'Техники' },
+    { id: 'smer', label: 'СМЭР', badgeKey: 'smer' },
+    { id: 'scales', label: 'Шкалы' },
+    { id: 'notes', label: 'Заметки' }
+  ],
+  gestalt: [
+    { id: 'card', label: 'Карточка' },
+    { id: 'phenom', label: 'Феноменология' },
+    { id: 'cycle', label: 'Цикл опыта' },
+    { id: 'tech', label: 'Техники' },
+    { id: 'unfin', label: 'Незавершённые' },
+    { id: 'notes', label: 'Заметки' }
+  ],
+  integrative: [
+    { id: 'card', label: 'Карточка' },
+    { id: 'conc', label: 'Концептуализация' },
+    { id: 'approaches', label: 'Подходы' },
+    { id: 'tech', label: 'Техники' },
+    { id: 'notes', label: 'Заметки' }
+  ]
+};
+
+function getSuggested(messages, stage) {
+  const lastClient = [...messages].reverse().find(m => m.role === 'client');
+  const lastTherapist = [...messages].reverse().find(m => m.role === 'therapist');
+  const out = [];
+  const dist = lastClient?.distortions || [];
+  if (dist.length > 0) {
+    out.push({ text: 'Проверка доказательств', kind: 'suggested' });
+    if (dist.includes('catastrophizing') || dist.includes('whatif')) out.push({ text: 'Декатастрофизация', kind: 'suggested' });
+    if (dist.includes('labeling') || dist.includes('shoulds')) out.push({ text: 'Двойной стандарт', kind: 'suggested' });
+  }
+  if (!lastTherapist) {
+    out.push({ text: 'Установка повестки', kind: 'suggested' });
+    out.push({ text: 'Проверка настроения', kind: 'suggested' });
+  }
+  if (messages.length > 4 && messages.length < 12) {
+    out.push({ text: 'Сократический вопрос', kind: 'suggested' });
+  }
+  out.push({ text: 'Эмпатическое отражение', kind: 'normal' });
+  out.push({ text: 'Резюме', kind: 'normal' });
+  const seen = new Set();
+  return out.filter(o => { if (seen.has(o.text)) return false; seen.add(o.text); return true; });
+}
+
+function getModeSuggested(messages, stage, mode) {
+  if (mode === 'gestalt') return [
+    { text: 'Что сейчас чувствуете?', kind: 'suggested' },
+    { text: 'Где в теле отзывается?', kind: 'suggested' },
+    { text: 'Пустой стул', kind: 'normal' },
+    { text: 'Завершить ситуацию', kind: 'normal' }
+  ];
+  if (mode === 'integrative') return [
+    { text: 'Исследовать', kind: 'suggested' },
+    { text: 'Валидация', kind: 'suggested' },
+    { text: 'Эксперимент', kind: 'normal' },
+    { text: 'Мета-комментарий', kind: 'normal' }
+  ];
+  return getSuggested(messages, stage);
+}
+
+function detectStage(messages) {
+  const n = messages.filter(m => m.role === 'therapist').length;
+  if (n === 0) return 'Открытие';
+  if (n <= 2) return 'Установка повестки';
+  if (n <= 4) return 'Проверка настроения';
+  if (n <= 8) return 'Выявление автоматической мысли';
+  if (n <= 14) return 'Сократический диалог';
+  if (n <= 17) return 'Резюме и домашнее задание';
+  return 'Обратная связь';
+}
+
+// ============ API KEY MODAL ============
+
+function ApiKeyModal({ onSave, onDemo }) {
+  const [key, setKey] = useState('');
+  const save = () => { if (key.trim().startsWith('sk-ant-')) { window.setApiKey(key.trim()); onSave(); } };
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-brand">
+          <div className="brand-mark" style={{ fontFamily: 'var(--serif)', fontStyle: 'italic' }}>К</div>
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 540 }}>Практика КПТ</div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Trainer · v1.0</div>
+          </div>
+        </div>
+        <div className="modal-h">Введите API-ключ Anthropic</div>
+        <div className="modal-sub">
+          Тренажёр использует Claude для генерации ответов клиента и оценки техник терапевта. Нужен ключ с доступом к API.
+        </div>
+        <div className="modal-label">Anthropic API Key</div>
+        <input
+          className="modal-input"
+          type="password"
+          placeholder="sk-ant-api03-..."
+          value={key}
+          onChange={e => setKey(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && save()}
+          autoFocus
+        />
+        <div className="modal-hint">
+          Ключ хранится только в localStorage вашего браузера и никуда не отправляется, кроме api.anthropic.com.
+          Получить ключ: <a href="https://console.anthropic.com/settings/keys" target="_blank" style={{ color: 'var(--accent)' }}>console.anthropic.com</a>
+        </div>
+        <button className="modal-btn" onClick={save} disabled={!key.trim().startsWith('sk-ant-')}>
+          Начать тренировку →
+        </button>
+        <button className="modal-demo-btn" onClick={onDemo}>
+          Посмотреть демо — без ключа
+        </button>
+        <div className="modal-note">Ключ не покидает ваш браузер</div>
+      </div>
+    </div>
+  );
+}
+
+// ============ SIDEBAR ============
+
+function CaseItem({ c, isActive, onSelect, onArchive, menuLabel }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false); };
+    setTimeout(() => document.addEventListener('click', h), 0);
+    return () => document.removeEventListener('click', h);
+  }, [open]);
+  return (
+    <div className={`case-item ${isActive ? 'active' : ''}`}>
+      <div className="case-item-main" onClick={() => onSelect(c.id)}>
+        <div className="case-avatar" style={{ background: c.accent }}>{c.avatar}</div>
+        <div className="case-meta">
+          <div className="case-name">{c.name}</div>
+          <div className="case-dx">{c.diagnosisShort}</div>
+        </div>
+      </div>
+      <div style={{ position: 'relative', flexShrink: 0 }} ref={menuRef}>
+        <button className={`case-menu-btn${open ? ' open' : ''}`} onClick={e => { e.stopPropagation(); setOpen(!open); }}>⋮</button>
+        {open && (
+          <div className="context-menu">
+            <button className="context-menu-item" onClick={() => { onArchive(c.id); setOpen(false); }}>{menuLabel}</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Sidebar({ allCases, activeCaseId, onSelectCase, activeSessionN, onSelectSession, onChangeKey, archivedIds, onArchive, onRestore, onNewClient, mobileVisible }) {
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const activeCase = allCases.find(c => c.id === activeCaseId);
+  const activeCases = allCases.filter(c => !archivedIds.has(c.id));
+  const archivedCases = allCases.filter(c => archivedIds.has(c.id));
+  return (
+    <aside className={`sidebar${mobileVisible ? ' mobile-visible' : ''}`}>
+      <div className="sidebar-header">
+        <div className="brand-mark">К</div>
+        <div>
+          <div className="brand-title">Практика КПТ</div>
+          <div className="brand-sub">Trainer · v1.0</div>
+        </div>
+      </div>
+
+      <div className="sidebar-section" style={{ overflowY: 'auto', flex: 1 }}>
+        <div className="sidebar-label">Клиенты</div>
+        {activeCases.map(c => (
+          <CaseItem key={c.id} c={c} isActive={c.id === activeCaseId} onSelect={onSelectCase} onArchive={onArchive} menuLabel="Архивировать" />
+        ))}
+        <button className="new-client-btn" onClick={onNewClient}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>＋</span>
+          Новый клиент
+        </button>
+      </div>
+
+      {activeCase && !archivedIds.has(activeCaseId) && (
+        <div className="sidebar-section" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          <div className="sidebar-label">Сессии · {activeCase.name}</div>
+          <div className="sessions">
+            {activeCase.sessions.map(s => (
+              <button key={s.n} className={`session-row ${s.n === activeSessionN ? 'active' : ''}`} data-status={s.status} onClick={() => onSelectSession(s.n)}>
+                <span className="session-num">#{String(s.n).padStart(2, '0')}</span>
+                <span className="session-title">{s.stage}</span>
+                <span className="session-dot"></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {archivedCases.length > 0 && (
+        <div className="archive-section">
+          <button className="archive-toggle" onClick={() => setArchiveOpen(!archiveOpen)}>
+            Архив
+            <span className="archive-badge">{archivedCases.length}</span>
+            <span className={`archive-toggle-arrow${archiveOpen ? ' open' : ''}`}>▶</span>
+          </button>
+          {archiveOpen && archivedCases.map(c => (
+            <CaseItem key={c.id} c={c} isActive={c.id === activeCaseId} onSelect={onSelectCase} onArchive={onRestore} menuLabel="Восстановить" />
+          ))}
+        </div>
+      )}
+
+      <div className="sidebar-footer">
+        <div className="therapist-chip">
+          <div className="case-avatar">Я</div>
+          <div className="case-meta">
+            <div className="case-name">Терапевт</div>
+            <div className="case-dx">Тренировка</div>
+          </div>
+        </div>
+        <button className="key-btn" onClick={onChangeKey} title="Изменить API-ключ">🔑</button>
+      </div>
+    </aside>
+  );
+}
+
+// ============ NEW CLIENT MODAL ============
+
+function NewClientModal({ onClose, onGenerate }) {
+  const [gender, setGender] = useState('F');
+  const [age, setAge] = useState(30);
+  const [diagnosis, setDiagnosis] = useState('Депрессия');
+  const [difficulty, setDifficulty] = useState('medium');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const diagnoses = ['Депрессия', 'Паническое расстройство', 'Социальная тревога', 'ОКР', 'ПТСР', 'Расстройство личности', 'Прокрастинация/перфекционизм', 'ГТР'];
+  async function handleGenerate() {
+    setLoading(true); setError('');
+    try {
+      const c = await window.generateNewClient({ gender, age, diagnosis, difficulty });
+      onGenerate(c);
+    } catch(e) {
+      setError(e.message || 'Ошибка генерации. Проверьте API-ключ.');
+    } finally { setLoading(false); }
+  }
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-h" style={{ marginBottom: 4 }}>Новый клиент</div>
+        <div className="modal-sub">ИИ сгенерирует профиль, сценарий и концептуализацию.</div>
+        <div className="form-field">
+          <label className="form-label">Пол</label>
+          <div className="form-radio-group">
+            {[['M','Мужской'],['F','Женский']].map(([v,l]) => (
+              <button key={v} className={`form-radio-btn${gender===v?' active':''}`} onClick={() => setGender(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div className="form-field">
+          <label className="form-label">Возраст: {age}</label>
+          <input type="range" className="form-range" min={18} max={65} value={age} onChange={e => setAge(+e.target.value)} />
+        </div>
+        <div className="form-field">
+          <label className="form-label">Диагноз</label>
+          <select className="form-select" value={diagnosis} onChange={e => setDiagnosis(e.target.value)}>
+            {diagnoses.map(d => <option key={d}>{d}</option>)}
+          </select>
+        </div>
+        <div className="form-field">
+          <label className="form-label">Сложность</label>
+          <div className="form-radio-group">
+            {[['beginner','Начинающий'],['medium','Средний'],['advanced','Продвинутый']].map(([v,l]) => (
+              <button key={v} className={`form-radio-btn${difficulty===v?' active':''}`} onClick={() => setDifficulty(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        {error && <div style={{ color: 'var(--warn)', fontSize: 12, marginBottom: 12 }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="modal-btn" style={{ flex: 1 }} onClick={handleGenerate} disabled={loading}>
+            {loading ? 'Генерирую...' : 'Создать клиента →'}
+          </button>
+          <button onClick={onClose} style={{ padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 13 }}>Отмена</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ MESSAGE COMPONENTS ============
+
+function renderClientText(text, distortions, mode) {
+  if (!distortions || distortions.length === 0) return text;
+  const lookup = mode === 'gestalt' ? window.GESTALT_MECHANISMS : window.DISTORTIONS;
+  const badges = distortions.map((d, i) => {
+    const def = lookup.find(x => x.id === d);
+    if (!def) return null;
+    return <span key={i} className="distortion-mark" title={def.desc}>{def.name}</span>;
+  }).filter(Boolean).reduce((acc, el, i) => acc.concat(i === 0 ? [el] : [' · ', el]), []);
+  return <span>{text}{' '}{badges}</span>;
+}
+
+function InlineFeedback({ fb }) {
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  const scoreLabel = fb.score === 'good' ? 'Сильный ход' : fb.score === 'ok' ? 'Нормально' : 'Стоит пересмотреть';
+  const source = fb.approach ? 'Интегративный' : fb.contact_phase ? 'Перлз / Польстер' : 'Бек / Лихи';
+  return (
+    <div className={`inline-feedback${collapsed ? ' collapsed' : ''}`} onClick={() => { if (window.innerWidth <= 768) setCollapsed(c => !c); }}>
+      <div className="inline-feedback-head">
+        <span className={`score-pill ${fb.score}`}>● {scoreLabel}</span>
+        <span>· {source}</span>
+        <span className="inline-feedback-toggle">{collapsed ? '▾ оценка' : '▴ скрыть'}</span>
+      </div>
+      <div className="inline-feedback-body">
+        <div className="fb-row"><div className="fb-label">Техника</div><div className="fb-val">{fb.technique || '—'}</div></div>
+        {fb.approach && <div className="fb-row"><div className="fb-label">Подход</div><div className="fb-val"><span className={`approach-badge ${fb.approach}`}>{fb.approach}</span></div></div>}
+        <div className="fb-row"><div className="fb-label">Эмпатия</div><div className="fb-val">{fb.empathy}/100</div></div>
+        <div className="fb-row"><div className="fb-label">Точность</div><div className="fb-val">{fb.accuracy}/100</div></div>
+        <div className="fb-row"><div className="fb-label">Подсказка</div><div className="fb-val"><em>{fb.hint}</em></div></div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewCard({ review }) {
+  return (
+    <div className="review-card">
+      <div className="review-h">Сводка по сессии</div>
+      <div className="review-sub">Самопроверка по критериям Бек и Лихи</div>
+      <div className="review-metrics">
+        <div className="review-metric">
+          <div className="review-metric-label">Эмпатия</div>
+          <div className="review-metric-val">{review.empathy}<span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>/100</span></div>
+        </div>
+        <div className="review-metric">
+          <div className="review-metric-label">Точность техник</div>
+          <div className="review-metric-val">{review.accuracy}<span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>/100</span></div>
+        </div>
+        <div className="review-metric">
+          <div className="review-metric-label">Реплик / искажений</div>
+          <div className="review-metric-val">{review.moves}<span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}> / {review.distortions}</span></div>
+        </div>
+      </div>
+      <div className="review-section">
+        <div className="review-section-h">Использованные техники</div>
+        {review.techniques.length === 0
+          ? <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Чётко идентифицируемых техник не зафиксировано. Попробуйте на следующей сессии сознательно выбирать инструмент — например, начать с сократического вопроса.</div>
+          : <ul className="review-list">{review.techniques.map((t, i) => <li key={i}>{t}</li>)}</ul>}
+      </div>
+      <div className="review-section">
+        <div className="review-section-h">Что попробовать в следующий раз</div>
+        <ul className="review-list">
+          <li>Завершите сессию явной обратной связью: «Что было полезного? Что вы заберёте с собой?» (Бек, гл. 4)</li>
+          <li>Сформулируйте домашнее задание как поведенческий эксперимент, а не как «попробуй»</li>
+          <li>Если искажения накапливаются — сделайте СМЭР-запись прямо в сессии</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function Message({ msg, caseData, mode }) {
+  if (msg.role === 'review') return <ReviewCard review={msg.review} />;
+  if (msg.role === 'system') return <div className="msg system">{msg.text}</div>;
+  const isTherapist = msg.role === 'therapist';
+  return (
+    <div className={`msg ${msg.role}`}>
+      <div className="msg-avatar" style={{ background: isTherapist ? '#1A1A19' : caseData.accent }}>
+        {isTherapist ? 'Я' : caseData.avatar}
+      </div>
+      <div className="msg-body">
+        <div className="msg-head">
+          <span className="msg-name">{isTherapist ? 'Терапевт' : caseData.name}</span>
+          {msg.emotion && <span className="msg-emotion">{msg.emotion}{msg.intensity ? ` · ${msg.intensity}/100` : ''}</span>}
+          {msg.time && <span className="msg-time">{msg.time}</span>}
+        </div>
+        <div className="msg-text">
+          {msg.role === 'client' ? renderClientText(msg.text, msg.distortions, mode) : msg.text}
+        </div>
+        {isTherapist && msg.feedback && <InlineFeedback fb={msg.feedback} />}
+      </div>
+    </div>
+  );
+}
+
+function TypingIndicator({ caseData }) {
+  return (
+    <div className="msg client">
+      <div className="msg-avatar" style={{ background: caseData.accent }}>{caseData.avatar}</div>
+      <div className="msg-body">
+        <div className="msg-head">
+          <span className="msg-name">{caseData.name}</span>
+          <span className="msg-emotion">печатает</span>
+        </div>
+        <div className="typing"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  );
+}
+
+// ============ COMPOSER ============
+
+function Composer({ onSend, disabled, suggested }) {
+  const [value, setValue] = useState('');
+  const ref = useRef(null);
+
+  function autoSize() {
+    const t = ref.current;
+    if (!t) return;
+    t.style.height = 'auto';
+    t.style.height = Math.min(200, t.scrollHeight) + 'px';
+  }
+
+  function handleSend() {
+    const v = value.trim();
+    if (!v || disabled) return;
+    onSend(v);
+    setValue('');
+    setTimeout(autoSize, 0);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }
+
+  return (
+    <div className="composer">
+      <div className="composer-inner">
+        <div className="composer-hint">
+          <span>Вы — </span>
+          <span className="composer-hint-strong">терапевт</span>
+          <span>· напишите следующую реплику. Используйте сократические вопросы, эмпатию, не давайте советов.</span>
+        </div>
+        <div className="composer-box">
+          <textarea
+            ref={ref}
+            value={value}
+            onChange={e => { setValue(e.target.value); autoSize(); }}
+            onKeyDown={handleKey}
+            placeholder='Например: "Понимаю, что это очень сложно. Расскажите, что именно крутилось у вас в голове ночью?"'
+            disabled={disabled}
+          />
+          <div className="composer-toolbar">
+            <div className="composer-techniques">
+              {suggested.slice(0, 4).map((s, i) => (
+                <span key={i} className={`tech-chip ${s.kind === 'suggested' ? 'suggested' : ''}`}>{s.text}</span>
+              ))}
+            </div>
+            <button className="send-btn" onClick={handleSend} disabled={disabled || !value.trim()}>
+              {disabled ? 'Клиент думает...' : 'Отправить'}
+              <kbd>↵</kbd>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ CHAT AREA ============
+
+function ModeSwitch({ mode, onChange }) {
+  const labels = { cbt: 'КПТ', gestalt: 'Гештальт', integrative: 'Интегративный' };
+  return (
+    <div className="mode-switcher">
+      {Object.entries(labels).map(([m, l]) => (
+        <button key={m} className={`mode-btn${mode === m ? ' active' : ''}`} onClick={() => onChange(m)}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
+function ChatArea({ caseData, messages, onSend, isThinking, suggested, stage, onEndSession, error, mode, onModeChange, isDemo, mobileVisible, onOpenMobileSettings }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length, isThinking]);
+
+  return (
+    <main className={`main${mobileVisible ? ' mobile-visible' : ''}`}>
+      <div className="main-header">
+        <div className="session-title-big">
+          <span>{caseData.name}</span>
+          <span className="crumb"> · Сессия #{caseData.sessions.find(s => s.status === 'active')?.n || 1}</span>
+        </div>
+        <div className="stage-pill">
+          <span className="stage-dot"></span>
+          {stage}
+        </div>
+        <ModeSwitch mode={mode} onChange={onModeChange} />
+        {isDemo && <span className="demo-badge">⚡ ДЕМО</span>}
+        <div className="timer">
+          <span className="timer-dot"></span>
+          В сессии
+        </div>
+        <button className="end-session-btn" onClick={onEndSession}>Завершить сессию</button>
+        <button className="mobile-settings-btn" onClick={onOpenMobileSettings} aria-label="Настройки сессии">⚙️</button>
+      </div>
+
+      <div className="chat-scroll" ref={scrollRef}>
+        <div className="chat-inner">
+          {messages.map((m, i) => <Message key={i} msg={m} caseData={caseData} mode={mode} />)}
+          {isThinking && <TypingIndicator caseData={caseData} />}
+        </div>
+      </div>
+
+      <Composer onSend={onSend} disabled={isThinking} suggested={suggested} />
+      {error && <div className="error-toast">{error}</div>}
+    </main>
+  );
+}
+
+// ============ RIGHT PANEL TABS ============
+
+function CardTab({ caseData }) {
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Клиент</div>
+        <div className="panel-h2">{caseData.name}</div>
+        <div className="panel-meta">{caseData.age} лет</div>
+      </div>
+      <div className="panel-section">
+        <div className="field">
+          <div className="field-label">Диагноз (Diagnosis)</div>
+          <div className="field-val">{caseData.diagnosis}</div>
+        </div>
+        <div className="field">
+          <div className="field-label">Жалоба (Presenting concern)</div>
+          <div className="field-val">«{caseData.presenting}»</div>
+        </div>
+        <div className="field">
+          <div className="field-label">Анамнез (History)</div>
+          <div className="field-val">{caseData.history}</div>
+        </div>
+        <div className="field">
+          <div className="field-label">Риск (Risk assessment)</div>
+          <div className="field-val">
+            <span className="risk-badge">● Низкий</span>
+            <div style={{ marginTop: 6 }}>{caseData.risk}</div>
+          </div>
+        </div>
+        {caseData.medication && caseData.medication !== 'Нет.' && (
+          <div className="field">
+            <div className="field-label">Медикаменты (Medication)</div>
+            <div className="field-val">{caseData.medication}</div>
+          </div>
+        )}
+      </div>
+      <div className="panel-section">
+        <div className="field-label">Цели терапии (Treatment goals)</div>
+        <ul className="goal-list">
+          {caseData.goals.map((g, i) => (
+            <li key={i}>
+              <span className="goal-num">{String(i + 1).padStart(2, '0')}</span>
+              <span>{g}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
+
+function ConceptTab({ caseData }) {
+  const c = caseData.conceptualization;
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Когнитивная концептуализация</div>
+        <div className="panel-h2">Схема Бек</div>
+        <div className="panel-meta">Заполняется по ходу сессии. Гипотезы помечены курсивом.</div>
+      </div>
+      <div className="panel-section">
+        <div className="beck-diagram">
+          <div className="beck-box">
+            <div className="beck-box-label">Релевантные данные (Relevant childhood / life data)</div>
+            <div className="beck-box-content">{c.relevantData}</div>
+          </div>
+          <div className="beck-arrow">↓</div>
+          <div className="beck-box">
+            <div className="beck-box-label">Глубинные убеждения (Core beliefs)</div>
+            <div className="beck-box-content"><em>{c.coreBeliefs}</em></div>
+          </div>
+          <div className="beck-arrow">↓</div>
+          <div className="beck-box">
+            <div className="beck-box-label">Промежуточные убеждения / правила (Intermediate beliefs)</div>
+            <div className="beck-box-content"><em>{c.intermediateBeliefs}</em></div>
+          </div>
+          <div className="beck-arrow">↓</div>
+          <div className="beck-box">
+            <div className="beck-box-label">Компенсаторные стратегии (Compensatory strategies)</div>
+            <div className="beck-box-content">{c.compensatoryStrategies}</div>
+          </div>
+        </div>
+      </div>
+      <div className="panel-section">
+        <div className="panel-h">Текущая активация</div>
+        <div className="beck-triple">
+          <div className="beck-box">
+            <div className="beck-box-label">Ситуации</div>
+            <div className="beck-box-content"><ul style={{ margin: 0, paddingLeft: 16 }}>{c.situations.map((s, i) => <li key={i}>{s}</li>)}</ul></div>
+          </div>
+          <div className="beck-box">
+            <div className="beck-box-label">АМ</div>
+            <div className="beck-box-content"><ul style={{ margin: 0, paddingLeft: 16 }}>{c.automaticThoughts.map((s, i) => <li key={i}>«{s}»</li>)}</ul></div>
+          </div>
+          <div className="beck-box">
+            <div className="beck-box-label">Эмоции / поведение</div>
+            <div className="beck-box-content"><ul style={{ margin: 0, paddingLeft: 16 }}>{c.emotions.map((s, i) => <li key={i}>{s}</li>)}</ul></div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DistortionsTab({ observed }) {
+  const grouped = {};
+  observed.forEach(o => {
+    if (!grouped[o.id]) grouped[o.id] = { id: o.id, count: 0, quotes: [] };
+    grouped[o.id].count++;
+    if (o.quote) grouped[o.id].quotes.push(o.quote);
+  });
+  const arr = Object.values(grouped).sort((a, b) => b.count - a.count);
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Когнитивные искажения</div>
+        <div className="panel-h2">В речи клиента</div>
+        <div className="panel-meta">Подсвечиваются в реальном времени. По Лихи (гл. 2) и Бек (гл. 12).</div>
+      </div>
+      <div className="panel-section">
+        {arr.length === 0
+          ? <div className="empty-state">Пока искажений не замечено. Они появятся, как только клиент начнёт говорить.</div>
+          : arr.map(d => {
+              const def = window.DISTORTIONS.find(x => x.id === d.id);
+              if (!def) return null;
+              return (
+                <div key={d.id} className="distortion-card">
+                  <div className="distortion-card-head">
+                    <span className="distortion-name">{def.name}</span>
+                    <span className="distortion-en">{def.en}</span>
+                    <span className="distortion-count">×{d.count}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{def.desc}</div>
+                  {d.quotes.length > 0 && <div className="distortion-quote">«{d.quotes[d.quotes.length - 1]}»</div>}
+                </div>
+              );
+            })}
+        {arr.length > 0 && (
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+            <div className="panel-h">Не отмечены, но возможны</div>
+            {window.DISTORTIONS.filter(d => !grouped[d.id]).slice(0, 5).map(d => (
+              <div key={d.id} style={{ fontSize: 12, color: 'var(--text-3)', padding: '3px 0' }}>
+                <span style={{ color: 'var(--text-2)' }}>{d.name}</span> · {d.example}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+
+function SmerTab({ entries, onAdd }) {
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Дневник СМЭР</div>
+        <div className="panel-h2">7 колонок</div>
+        <div className="panel-meta">Ситуация → Мысль → Эмоция → Реакция (+ доказательства, альтернативная мысль, результат). Бек, гл. 9.</div>
+      </div>
+      <div className="panel-section">
+        {entries.length === 0
+          ? <div className="smer-empty">Пока записей нет.<br /><span className="smer-empty-action" onClick={onAdd}>Создать пустую запись →</span></div>
+          : (
+            <div className="smer-table">
+              {entries.map((e, i) => (
+                <div className="smer-row" key={i}>
+                  <div className="smer-grid">
+                    <div className="smer-full">
+                      <div className="smer-cell-label">Ситуация · {e.date}</div>
+                      <div className="smer-cell-val">{e.situation}</div>
+                    </div>
+                    <div>
+                      <div className="smer-cell-label">Автоматическая мысль</div>
+                      <div className="smer-cell-val">«{e.thought}» <span style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 10 }}>· {e.beliefInThought}%</span></div>
+                    </div>
+                    <div>
+                      <div className="smer-cell-label">Эмоция</div>
+                      <div className="smer-cell-val">{e.emotion} <span style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 10 }}>· {e.intensity}/100</span></div>
+                    </div>
+                    <div>
+                      <div className="smer-cell-label">Доказательства "за"</div>
+                      <div className="smer-cell-val">{e.evidenceFor || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="smer-cell-label">Доказательства "против"</div>
+                      <div className="smer-cell-val">{e.evidenceAgainst || '—'}</div>
+                    </div>
+                    <div className="smer-full">
+                      <div className="smer-cell-label">Альтернативная / сбалансированная мысль</div>
+                      <div className="smer-cell-val">{e.alternative || '—'}</div>
+                    </div>
+                    <div className="smer-full">
+                      <div className="smer-cell-label">Результат</div>
+                      <div className="smer-cell-val">{e.outcome || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="smer-empty" style={{ marginTop: 4 }}>
+                <span className="smer-empty-action" onClick={onAdd}>+ Добавить запись</span>
+              </div>
+            </div>
+          )}
+      </div>
+    </>
+  );
+}
+
+function ScalesTab({ caseData, scales }) {
+  const items = [
+    { key: 'PHQ9', name: 'PHQ-9', en: 'Депрессия', max: 27, color: '#D97757',
+      thresh: v => v < 5 ? 'минимум' : v < 10 ? 'лёгкая' : v < 15 ? 'умеренная' : v < 20 ? 'выраженная' : 'тяжёлая' },
+    { key: 'GAD7', name: 'GAD-7', en: 'Тревога', max: 21, color: '#2A6FDB',
+      thresh: v => v < 5 ? 'минимум' : v < 10 ? 'лёгкая' : v < 15 ? 'умеренная' : 'выраженная' },
+    { key: 'mood', name: 'Настроение', en: 'Mood (0–10)', max: 10, color: '#1F8A5B',
+      thresh: v => v < 3 ? 'очень низкое' : v < 5 ? 'низкое' : v < 7 ? 'среднее' : 'хорошее' }
+  ];
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Объективные шкалы</div>
+        <div className="panel-h2">Динамика</div>
+        <div className="panel-meta">Замеры в начале каждой сессии (Бек, гл. 4 — Mood check).</div>
+      </div>
+      <div className="panel-section">
+        {items.map(it => {
+          const v = scales[it.key] ?? caseData.initialScales[it.key];
+          return (
+            <div className="scale-row" key={it.key}>
+              <div className="scale-name">{it.name}<span className="scale-en">{it.en}</span></div>
+              <div className="scale-bar">
+                <div className="scale-bar-fill" style={{ width: `${(v / it.max) * 100}%`, background: it.color }}></div>
+              </div>
+              <div className="scale-val">
+                {v}<span style={{ color: 'var(--text-3)' }}>/{it.max}</span>
+                <span className="scale-val-meta">{it.thresh(v)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="panel-section">
+        <div className="panel-h">История</div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>
+          <div>Сессия 1 · PHQ-9 19, GAD-7 11, Mood 2/10</div>
+          <div>Сессия 2 · PHQ-9 18, GAD-7 10, Mood 3/10</div>
+          <div style={{ fontWeight: 600, color: 'var(--text)' }}>
+            Сессия 3 · PHQ-9 {scales.PHQ9 ?? caseData.initialScales.PHQ9}, GAD-7 {scales.GAD7 ?? caseData.initialScales.GAD7}, Mood {scales.mood ?? caseData.initialScales.mood}/10
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function NotesTab({ notes, onChange }) {
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Свободные заметки</div>
+        <div className="panel-h2">Записи терапевта</div>
+        <div className="panel-meta">Только для вас. Гипотезы, наблюдения, темы на следующую сессию.</div>
+      </div>
+      <div className="panel-section">
+        <textarea
+          className="notes-area"
+          value={notes}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Гипотеза о глубинном убеждении... Что попробовать на следующей сессии... Что зацепило..."
+        />
+      </div>
+    </>
+  );
+}
+
+function TechniquesTab({ mode }) {
+  if (mode === 'gestalt') return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Шпаргалка</div>
+        <div className="panel-h2">Техники гештальта</div>
+        <div className="panel-meta">Источники: Ф. Перлз «Гештальт-терапия», И. и М. Польстер «Интегрированная гештальт-терапия».</div>
+      </div>
+      <div className="panel-section">
+        {window.GESTALT_TECHNIQUES.map(t => (
+          <div className="tech-card" key={t.name}>
+            <div className="tech-card-head"><span className="tech-name">{t.name}</span><span className="tech-en">{t.en}</span></div>
+            <div className="tech-desc">{t.desc}</div>
+            <div className="tech-source">{t.source}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Шпаргалка</div>
+        <div className="panel-h2">{mode === 'integrative' ? 'Техники КПТ + Гештальт' : 'Техники КПТ'}</div>
+        <div className="panel-meta">Источники: Дж. Бек «КПТ: От основ к направлениям» (3-е изд.), Р. Лихи «Техники когнитивной психотерапии»{mode === 'integrative' ? ', Перлз/Польстер' : ''}.</div>
+      </div>
+      <div className="panel-section">
+        {window.TECHNIQUES.map(g => (
+          <div className="tech-group" key={g.cat}>
+            <div className="tech-group-h">{g.cat}</div>
+            {g.items.map(t => (
+              <div className="tech-card" key={t.name}>
+                <div className="tech-card-head"><span className="tech-name">{t.name}</span><span className="tech-en">{t.en}</span></div>
+                <div className="tech-desc">{t.desc}</div>
+                <div className="tech-source">{t.source}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+        {mode === 'integrative' && (
+          <div className="tech-group">
+            <div className="tech-group-h">Гештальт-техники</div>
+            {window.GESTALT_TECHNIQUES.map(t => (
+              <div className="tech-card" key={t.name}>
+                <div className="tech-card-head"><span className="tech-name">{t.name}</span><span className="tech-en">{t.en}</span></div>
+                <div className="tech-desc">{t.desc}</div>
+                <div className="tech-source">{t.source}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function PhenomenologyTab({ phenom, onChange }) {
+  const fields = [
+    { key: 'body', label: 'Телесность' },
+    { key: 'voice', label: 'Голос / темп' },
+    { key: 'posture', label: 'Поза' },
+    { key: 'breathing', label: 'Дыхание' },
+    { key: 'eyeContact', label: 'Контакт глазами' }
+  ];
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Феноменологические наблюдения</div>
+        <div className="panel-h2">Феноменология</div>
+        <div className="panel-meta">Что вы наблюдаете в теле, голосе, позе клиента — здесь и сейчас. Польстер, гл. 3.</div>
+      </div>
+      <div className="panel-section">
+        {fields.map(f => (
+          <div className="phenom-field" key={f.key}>
+            <div className="phenom-label">{f.label}</div>
+            <textarea className="phenom-input" rows={2} value={phenom[f.key] || ''} onChange={e => onChange({ ...phenom, [f.key]: e.target.value })} placeholder="Запишите наблюдения..." />
+          </div>
+        ))}
+        <div className="phenom-field">
+          <div className="phenom-label">Уровень контакта (0–5)</div>
+          <div className="contact-level-btns">
+            {[0,1,2,3,4,5].map(n => (
+              <button key={n} className={`contact-level-btn${phenom.contactLevel === n ? ' active' : ''}`} onClick={() => onChange({ ...phenom, contactLevel: n })}>{n}</button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+            {['Нет контакта','Минимальный','Поверхностный','Средний','Хороший','Полный'][phenom.contactLevel] || ''}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function CycleTab({ cyclePhase, onChange }) {
+  const active = CYCLE_PHASES.find(p => p.id === cyclePhase);
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Цикл опыта (Perls)</div>
+        <div className="panel-h2">Где застрял клиент?</div>
+        <div className="panel-meta">Нажмите на фазу, чтобы отметить место прерывания контакта.</div>
+      </div>
+      <div className="panel-section">
+        <div className="cycle-viz">
+          {CYCLE_PHASES.map((p, i) => (
+            <React.Fragment key={p.id}>
+              <div className={`cycle-node${cyclePhase === p.id ? ' active' : ''}`} onClick={() => onChange(cyclePhase === p.id ? null : p.id)}>
+                <div className="cycle-node-dot">{i + 1}</div>
+                <div className="cycle-node-name">{p.name}</div>
+                <div className="cycle-node-en">{p.en}</div>
+              </div>
+              {i < CYCLE_PHASES.length - 1 && <div className="cycle-arrow">›</div>}
+            </React.Fragment>
+          ))}
+        </div>
+        {active && (
+          <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--accent-soft)', borderRadius: 'var(--radius)', fontSize: 13, color: 'var(--accent)', lineHeight: 1.5 }}>
+            <strong>{active.name}:</strong> {active.desc}
+          </div>
+        )}
+        {!active && <div className="empty-state">Нажмите на фазу выше, чтобы отметить, где клиент прерывает контакт.</div>}
+      </div>
+    </>
+  );
+}
+
+function UnfinishedTab({ situations, onChange }) {
+  const [newText, setNewText] = useState('');
+  function add() {
+    if (!newText.trim()) return;
+    onChange([...situations, { id: Date.now(), description: newText.trim(), date: timeNow(), resolved: false }]);
+    setNewText('');
+  }
+  function toggle(id) {
+    onChange(situations.map(s => s.id === id ? { ...s, resolved: !s.resolved } : s));
+  }
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Незавершённые ситуации</div>
+        <div className="panel-h2">Незавершённые гештальты</div>
+        <div className="panel-meta">Прерванные переживания и ситуации, требующие завершения. Перлз.</div>
+      </div>
+      <div className="panel-section">
+        {situations.map(s => (
+          <div className="situation-item" key={s.id}>
+            <div className={`situation-check${s.resolved ? ' resolved' : ''}`} onClick={() => toggle(s.id)}>{s.resolved ? '✓' : ''}</div>
+            <div>
+              <div className={`situation-text${s.resolved ? ' resolved' : ''}`}>{s.description}</div>
+              <div className="situation-date">{s.date}</div>
+            </div>
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <input className="phenom-input" style={{ flex: 1 }} placeholder="Добавить незавершённую ситуацию..." value={newText} onChange={e => setNewText(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} />
+          <button onClick={add} style={{ padding: '6px 12px', background: 'var(--text)', color: 'var(--bg)', borderRadius: 'var(--radius-sm)', fontSize: 12 }}>+</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ApproachesTab({ approachCounts, recentApproaches }) {
+  const approaches = [
+    { key: 'cbt', label: 'КПТ', color: 'var(--accent)' },
+    { key: 'gestalt', label: 'Гештальт', color: 'var(--warm)' },
+    { key: 'psychodynamic', label: 'Психодинамика', color: '#7C3AED' },
+    { key: 'humanistic', label: 'Гуманистический', color: 'var(--success)' }
+  ];
+  const total = Math.max(1, Object.values(approachCounts).reduce((a, b) => a + b, 0));
+  return (
+    <>
+      <div className="panel-section">
+        <div className="panel-h">Интегративный анализ</div>
+        <div className="panel-h2">Подходы</div>
+        <div className="panel-meta">Распределение техник по теоретическим школам в текущей сессии.</div>
+      </div>
+      <div className="panel-section">
+        <div className="approach-bars">
+          {approaches.map(a => (
+            <div className="approach-row" key={a.key}>
+              <div className="approach-label">{a.label}</div>
+              <div className="approach-bar"><div className="approach-bar-fill" style={{ width: `${(approachCounts[a.key] / total) * 100}%`, background: a.color }}></div></div>
+              <div className="approach-count-num">{approachCounts[a.key]}</div>
+            </div>
+          ))}
+        </div>
+        {recentApproaches.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <div className="panel-h">Последние интервенции</div>
+            {recentApproaches.slice(-5).reverse().map((r, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6, fontSize: 12 }}>
+                <span className={`approach-badge ${r.approach}`}>{r.approach}</span>
+                <span style={{ color: 'var(--text-2)', flex: 1 }}>{r.technique || r.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {total === 1 && <div className="empty-state">Начните сессию — здесь появится анализ использованных подходов.</div>}
+      </div>
+    </>
+  );
+}
+
+function RightPanel({ caseData, distortionsObserved, mechanisms, smerEntries, scales, notes, onNotesChange, onAddSmer, mode, approachCounts, recentApproaches, cyclePhase, onCyclePhaseChange, phenomenology, onPhenomenologyChange, unfinishedSituations, onUnfinishedChange, mobileVisible }) {
+  const [tab, setTab] = useState('card');
+  const modeTabs = TABS_BY_MODE[mode] || TABS_BY_MODE.cbt;
+
+  useEffect(() => {
+    const ids = modeTabs.map(t => t.id);
+    if (!ids.includes(tab)) setTab('card');
+  }, [mode]);
+
+  const getBadge = (t) => {
+    if (t.badgeKey === 'distortions') return distortionsObserved.length;
+    if (t.badgeKey === 'smer') return smerEntries.length;
+    return null;
+  };
+
+  return (
+    <aside className={`right-panel${mobileVisible ? ' mobile-visible' : ''}`}>
+      <div className="right-tabs">
+        {modeTabs.map(t => {
+          const badge = getBadge(t);
+          return (
+            <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+              {t.label}
+              {badge != null && badge > 0 && <span className="tab-badge">{badge}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="right-content">
+        {tab === 'card' && <CardTab caseData={caseData} />}
+        {tab === 'conc' && <ConceptTab caseData={caseData} />}
+        {tab === 'dist' && <DistortionsTab observed={distortionsObserved} />}
+        {tab === 'tech' && <TechniquesTab mode={mode} />}
+        {tab === 'smer' && <SmerTab entries={smerEntries} onAdd={onAddSmer} />}
+        {tab === 'scales' && <ScalesTab caseData={caseData} scales={scales} />}
+        {tab === 'notes' && <NotesTab notes={notes} onChange={onNotesChange} />}
+        {tab === 'phenom' && <PhenomenologyTab phenom={phenomenology} onChange={onPhenomenologyChange} />}
+        {tab === 'cycle' && <CycleTab cyclePhase={cyclePhase} onChange={onCyclePhaseChange} />}
+        {tab === 'unfin' && <UnfinishedTab situations={unfinishedSituations} onChange={onUnfinishedChange} />}
+        {tab === 'approaches' && <ApproachesTab approachCounts={approachCounts} recentApproaches={recentApproaches} />}
+      </div>
+    </aside>
+  );
+}
+
+// ============ APP ROOT ============
+
+function MobileSettingsSheet({ mode, onModeChange, onEndSession, onClose }) {
+  const modes = [
+    { id: 'cbt', label: 'КПТ', desc: 'Когнитивно-поведенческая терапия' },
+    { id: 'gestalt', label: 'Гештальт', desc: 'Гештальт-терапия (Перлз / Польстер)' },
+    { id: 'integrative', label: 'Интегративный', desc: 'Смешанный подход' }
+  ];
+  return (
+    <div className="mobile-settings-sheet">
+      <div className="mobile-settings-backdrop" onClick={onClose} />
+      <div className="mobile-settings-panel">
+        <div className="mobile-settings-handle" />
+        <div className="mobile-settings-section-title">Режим терапии</div>
+        {modes.map(m => (
+          <button key={m.id} className={`mobile-mode-row${mode === m.id ? ' active' : ''}`} onClick={() => { onModeChange(m.id); onClose(); }}>
+            <div>
+              <div style={{ fontWeight: 500 }}>{m.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400, marginTop: 1 }}>{m.desc}</div>
+            </div>
+            {mode === m.id && <span className="mobile-mode-check">✓</span>}
+          </button>
+        ))}
+        <div className="mobile-settings-divider" />
+        <button className="mobile-end-session-row" onClick={() => { onEndSession(); onClose(); }}>
+          Завершить сессию
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function makeInitialCaseState(c) {
+  return {
+    messages: c.opening.map(m => ({ ...m, time: m.role === 'system' ? null : timeNow() })),
+    distortions: [],
+    mechanisms: [],
+    smer: [],
+    notes: '',
+    scales: { ...c.initialScales },
+    thinking: false,
+    error: null,
+    activeSessionN: c.sessions.find(s => s.status === 'active')?.n || 1,
+    approachCounts: { cbt: 0, gestalt: 0, psychodynamic: 0, humanistic: 0 },
+    recentApproaches: [],
+    cyclePhase: null,
+    phenomenology: { body: '', voice: '', posture: '', breathing: '', eyeContact: '', contactLevel: 3 },
+    unfinishedSituations: []
+  };
+}
+
+function App() {
+  const [hasKey, setHasKey] = useState(() => !!window.getApiKey());
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [therapyMode, setTherapyMode] = useState(() => localStorage.getItem('cbt_therapy_mode') || 'cbt');
+  const [mobileTab, setMobileTab] = useState('chat');
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
+  const [generatedClients, setGeneratedClients] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cbt_generated_clients') || '[]'); } catch { return []; }
+  });
+  const [archivedClientIds, setArchivedClientIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('cbt_archived_ids') || '[]')); } catch { return new Set(); }
+  });
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState('maria');
+
+  const allCases = useMemo(() => [...window.CASES, ...generatedClients], [generatedClients]);
+  const activeCase = allCases.find(c => c.id === activeCaseId) || allCases[0];
+
+  const [stateByCase, setStateByCase] = useState(() => {
+    const obj = {};
+    window.CASES.forEach(c => { obj[c.id] = makeInitialCaseState(c); });
+    return obj;
+  });
+
+  const state = stateByCase[activeCaseId] || makeInitialCaseState(activeCase);
+
+  function patchState(patch) {
+    setStateByCase(prev => ({ ...prev, [activeCaseId]: { ...(prev[activeCaseId] || makeInitialCaseState(activeCase)), ...patch } }));
+  }
+
+  function setMessages(updater) {
+    setStateByCase(prev => {
+      const cur = prev[activeCaseId] || makeInitialCaseState(activeCase);
+      const next = typeof updater === 'function' ? updater(cur.messages) : updater;
+      return { ...prev, [activeCaseId]: { ...cur, messages: next } };
+    });
+  }
+
+  const stage = useMemo(() => detectStage(state.messages), [state.messages]);
+  const suggested = useMemo(() => getModeSuggested(state.messages, stage, therapyMode), [state.messages, stage, therapyMode]);
+
+  function handleModeChange(m) {
+    setTherapyMode(m);
+    localStorage.setItem('cbt_therapy_mode', m);
+  }
+
+  function handleArchive(caseId) {
+    const newSet = new Set([...archivedClientIds, caseId]);
+    setArchivedClientIds(newSet);
+    localStorage.setItem('cbt_archived_ids', JSON.stringify([...newSet]));
+    if (caseId === activeCaseId) {
+      const next = allCases.find(c => c.id !== caseId && !newSet.has(c.id));
+      if (next) setActiveCaseId(next.id);
+    }
+  }
+
+  function handleRestore(caseId) {
+    const newSet = new Set([...archivedClientIds]);
+    newSet.delete(caseId);
+    setArchivedClientIds(newSet);
+    localStorage.setItem('cbt_archived_ids', JSON.stringify([...newSet]));
+  }
+
+  function handleNewClientGenerated(c) {
+    const updated = [...generatedClients, c];
+    setGeneratedClients(updated);
+    localStorage.setItem('cbt_generated_clients', JSON.stringify(updated));
+    setStateByCase(prev => ({ ...prev, [c.id]: makeInitialCaseState(c) }));
+    setActiveCaseId(c.id);
+    setShowNewClientModal(false);
+  }
+
+  const handleSend = async (text) => {
+    if (state.thinking) return;
+    const therapistMsg = { role: 'therapist', text, time: timeNow(), feedback: null };
+    setMessages(ms => [...ms, therapistMsg]);
+    patchState({ thinking: true, error: null });
+
+    try {
+      const result = isDemoMode
+        ? await new Promise(resolve => setTimeout(() => resolve({
+            client_reply: '[ Демо-режим: введите API-ключ для живых ответов клиента ]',
+            emotion: 'нейтральное', intensity: 50,
+            feedback: {
+              technique: 'Демо', approach: 'cbt',
+              empathy: Math.floor(Math.random() * 35) + 55,
+              accuracy: Math.floor(Math.random() * 35) + 55,
+              score: ['good', 'ok', 'warn'][Math.floor(Math.random() * 3)],
+              hint: 'Это демо-режим. Введите API-ключ Anthropic, чтобы клиент отвечал по-настоящему и оценки были реальными.'
+            },
+            distortions: [], contact_phase: null
+          }), 800))
+        : await window.aiClientTurn({
+            caseData: activeCase,
+            history: [...state.messages, therapistMsg],
+            therapistMsg: text,
+            sessionStage: stage,
+            mode: therapyMode
+          });
+
+      if (!result || !result.client_reply) {
+        patchState({ thinking: false, error: 'Не удалось получить ответ. Попробуйте переформулировать.' });
+        setTimeout(() => patchState({ error: null }), 3500);
+        return;
+      }
+
+      const fb = result.feedback || {};
+      setStateByCase(prev => {
+        const cur = prev[activeCaseId] || makeInitialCaseState(activeCase);
+        const ms = [...cur.messages];
+        for (let i = ms.length - 1; i >= 0; i--) {
+          if (ms[i].role === 'therapist' && !ms[i].feedback) { ms[i] = { ...ms[i], feedback: fb }; break; }
+        }
+        ms.push({
+          role: 'client', text: result.client_reply,
+          emotion: result.emotion, intensity: result.intensity,
+          distortions: result.distortions || [], time: timeNow()
+        });
+
+        let newDistortions = [...cur.distortions];
+        let newMechanisms = [...cur.mechanisms];
+        let approachCounts = { ...cur.approachCounts };
+        let recentApproaches = [...cur.recentApproaches];
+
+        if (therapyMode === 'cbt') {
+          (result.distortions || []).forEach(id => newDistortions.push({ id, quote: result.client_reply, msgIndex: ms.length - 1 }));
+        } else if (therapyMode === 'gestalt') {
+          (result.distortions || []).forEach(id => newMechanisms.push({ id, quote: result.client_reply, msgIndex: ms.length - 1 }));
+        } else if (therapyMode === 'integrative') {
+          const ap = fb.approach;
+          if (ap && ap in approachCounts) {
+            approachCounts = { ...approachCounts, [ap]: approachCounts[ap] + 1 };
+            recentApproaches = [...recentApproaches.slice(-9), { approach: ap, technique: fb.technique, text: text.slice(0, 80) }];
+          }
+        }
+
+        return {
+          ...prev, [activeCaseId]: {
+            ...cur, messages: ms,
+            distortions: newDistortions,
+            mechanisms: newMechanisms,
+            approachCounts, recentApproaches,
+            cyclePhase: result.contact_phase || cur.cyclePhase,
+            thinking: false
+          }
+        };
+      });
+    } catch (e) {
+      console.error(e);
+      const msg = e.message === 'NO_API_KEY' ? 'API-ключ не задан. Нажмите 🔑 в левой панели.' : 'Ошибка: ' + e.message;
+      patchState({ thinking: false, error: msg });
+      setTimeout(() => patchState({ error: null }), 4000);
+    }
+  };
+
+  const handleEndSession = () => {
+    const therapistMsgs = state.messages.filter(m => m.role === 'therapist');
+    if (therapistMsgs.length === 0) {
+      patchState({ error: 'Сессия ещё не началась. Напишите хотя бы одну реплику.' });
+      setTimeout(() => patchState({ error: null }), 3000);
+      return;
+    }
+    const withFb = therapistMsgs.filter(m => m.feedback);
+    const avgEmpathy = Math.round(withFb.reduce((a, m) => a + (m.feedback?.empathy || 0), 0) / Math.max(1, withFb.length));
+    const avgAccuracy = Math.round(withFb.reduce((a, m) => a + (m.feedback?.accuracy || 0), 0) / Math.max(1, withFb.length));
+    const techniques = [...new Set(withFb.filter(m => m.feedback?.technique && m.feedback.technique !== '—').map(m => m.feedback.technique))];
+    setMessages(ms => [...ms, {
+      role: 'review',
+      review: { empathy: avgEmpathy, accuracy: avgAccuracy, moves: therapistMsgs.length, techniques, distortions: state.distortions.length },
+      time: timeNow()
+    }]);
+  };
+
+  const handleAddSmer = () => {
+    const lastClient = [...state.messages].reverse().find(m => m.role === 'client');
+    patchState({ smer: [...state.smer, {
+      date: timeNow(), situation: 'Из текущей сессии — заполните',
+      thought: lastClient?.text || 'Запишите автоматическую мысль', beliefInThought: 80,
+      emotion: lastClient?.emotion || 'тревога', intensity: lastClient?.intensity || 70,
+      evidenceFor: '', evidenceAgainst: '', alternative: '', outcome: ''
+    }]});
+  };
+
+  if (!hasKey && !isDemoMode) return <ApiKeyModal onSave={() => setHasKey(true)} onDemo={() => setIsDemoMode(true)} />;
+
+  return (
+    <div className="app">
+      {showNewClientModal && (
+        <NewClientModal onClose={() => setShowNewClientModal(false)} onGenerate={handleNewClientGenerated} />
+      )}
+      {showMobileSettings && (
+        <MobileSettingsSheet
+          mode={therapyMode}
+          onModeChange={handleModeChange}
+          onEndSession={handleEndSession}
+          onClose={() => setShowMobileSettings(false)}
+        />
+      )}
+      <Sidebar
+        allCases={allCases}
+        activeCaseId={activeCaseId}
+        onSelectCase={id => { setActiveCaseId(id); setMobileTab('chat'); }}
+        activeSessionN={state.activeSessionN}
+        onSelectSession={n => patchState({ activeSessionN: n })}
+        onChangeKey={() => { window.setApiKey(''); setHasKey(false); setIsDemoMode(false); }}
+        archivedIds={archivedClientIds}
+        onArchive={handleArchive}
+        onRestore={handleRestore}
+        onNewClient={() => setShowNewClientModal(true)}
+        mobileVisible={mobileTab === 'clients'}
+      />
+      <ChatArea
+        caseData={activeCase}
+        messages={state.messages}
+        onSend={handleSend}
+        isThinking={state.thinking}
+        suggested={suggested}
+        stage={stage}
+        onEndSession={handleEndSession}
+        error={state.error}
+        mode={therapyMode}
+        onModeChange={handleModeChange}
+        isDemo={isDemoMode}
+        mobileVisible={mobileTab === 'chat'}
+        onOpenMobileSettings={() => setShowMobileSettings(true)}
+      />
+      <RightPanel
+        caseData={activeCase}
+        distortionsObserved={state.distortions}
+        mechanisms={state.mechanisms}
+        smerEntries={state.smer}
+        scales={state.scales}
+        notes={state.notes}
+        onNotesChange={v => patchState({ notes: v })}
+        onAddSmer={handleAddSmer}
+        mode={therapyMode}
+        approachCounts={state.approachCounts}
+        recentApproaches={state.recentApproaches}
+        cyclePhase={state.cyclePhase}
+        onCyclePhaseChange={v => patchState({ cyclePhase: v })}
+        phenomenology={state.phenomenology}
+        onPhenomenologyChange={v => patchState({ phenomenology: v })}
+        unfinishedSituations={state.unfinishedSituations}
+        onUnfinishedChange={v => patchState({ unfinishedSituations: v })}
+        mobileVisible={mobileTab === 'card'}
+      />
+      <div className="mobile-tabbar">
+        {[
+          { id: 'clients', icon: '👥', label: 'Клиенты' },
+          { id: 'chat',    icon: '💬', label: 'Сессия' },
+          { id: 'card',    icon: '📋', label: 'Карточка' }
+        ].map(t => (
+          <button key={t.id} className={`mobile-tab-btn${mobileTab === t.id ? ' active' : ''}`} onClick={() => setMobileTab(t.id)}>
+            <span className="mobile-tab-btn-icon">{t.icon}</span>
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
